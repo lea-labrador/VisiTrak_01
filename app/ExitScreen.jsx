@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { View, SafeAreaView, StatusBar } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router"; // for navigation
 import QrScanner from "./QrScanner";
@@ -15,21 +15,25 @@ export default function ExitScreen() {
   };
 
   return (
-    <View className="flex-1 bg-blue-900 px-6">
-      {/* Header */}
-      <Header title="VisiTrak" />
+    <SafeAreaView className="flex-1 bg-blue-900">
+      <View className="flex-1 px-6">
+        {/* 🔹 Header with safe padding */}
+        <View style={{ paddingTop: StatusBar.currentHeight || 0 }}>
+          <Header title="VisiTrak" />
+        </View>
 
-      {/* QR Scanner + Manual Input */}
-      <View className="flex-1 justify-center">
-        <QrScanner
-          onScanned={handleScanned}
-          keyCode={keyCode}
-          setKeyCode={setKeyCode}
-        />
+        {/* QR Scanner + Manual Input */}
+        <View className="flex-1 justify-center">
+          <QrScanner
+            onScanned={handleScanned}
+            keyCode={keyCode}
+            setKeyCode={setKeyCode}
+          />
+        </View>
+
+        {/* Footer always at bottom */}
+        <Footer />
       </View>
-
-      {/* Footer */}
-      <Footer />
-    </View>
+    </SafeAreaView>
   );
 }
