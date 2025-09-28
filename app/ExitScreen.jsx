@@ -4,27 +4,14 @@ import { useRouter } from "expo-router"; // for navigation
 import QrScanner from "./QrScanner";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import MatchModal from "../components/MatchModal";
 
 export default function ExitScreen() {
   const [keyCode, setKeyCode] = useState("");
-  const [modalVisible, setModalVisible] = useState(false);
   const router = useRouter();
 
   const handleScanned = (data) => {
     console.log("✅ User exit key:", data);
-    setModalVisible(true);
-  };
-
-  const handleSurvey = () => {
-    setModalVisible(false);
-    router.push("/FeedbackForm"); // navigate to survey screen
-  };
-
-  const handleQuickOut = () => {
-    setModalVisible(false);
-    console.log("🚪 Quick checkout done without survey");
-    // TODO: perform logout or time-out logic here
+    router.push("/FeedbackForm"); // directly navigate after scan
   };
 
   return (
@@ -43,14 +30,6 @@ export default function ExitScreen() {
 
       {/* Footer */}
       <Footer />
-
-      {/* Match Modal */}
-      <MatchModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSurvey={handleSurvey}
-        onQuickOut={handleQuickOut}
-      />
     </View>
   );
 }

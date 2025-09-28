@@ -9,5 +9,7 @@ export default function RootLayout() {
   <Stack.Screen name="ExitScreen" options={{ headerShown: false }} />
   <Stack.Screen name="FeedbackForm" options={{ headerShown: false }} />
   <Stack.Screen name="ThankYouScreen" options={{ headerShown: false }} />
+  <Stack.Screen name="ScanScreen" options={{ headerShown: false }} />
+  <Stack.Screen name="ScanScreenOut" options={{ headerShown: false }} />
   </Stack>
 }

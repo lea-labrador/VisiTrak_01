@@ -75,7 +75,7 @@ const HomeScreen = () => {
             justifyContent: isPhone ? "center" : "space-between",
           }}
         >
-          <Link href="/VisiTrakForm" asChild>
+          <Link href="/ScanScreen" asChild>
             <Pressable
               className={`h-14 ${
                 isPhone ? "w-full mb-4" : "flex-1 mx-1"

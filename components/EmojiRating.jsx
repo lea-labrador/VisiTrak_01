@@ -2,11 +2,11 @@ import { View, Pressable } from "react-native";
 import { Ionicons, MaterialCommunityIcons, Entypo } from "@expo/vector-icons";
 
 const icons = [
-  { lib: Ionicons, name: "sad-outline", active: "sad" }, // 😞
-  { lib: MaterialCommunityIcons, name: "emoticon-confused-outline", active: "emoticon-confused" }, // 😕
-  { lib: MaterialCommunityIcons, name: "emoticon-neutral-outline", active: "emoticon-neutral" }, // 😐
-  { lib: Ionicons, name: "happy-outline", active: "happy" }, // 😊
-  { lib: Entypo, name: "emoji-happy", active: "emoji-happy" }, // 😁
+  { lib: Ionicons, name: "sad-outline", active: "sad" }, 
+  { lib: MaterialCommunityIcons, name: "emoticon-confused-outline", active: "emoticon-confused" }, 
+  { lib: MaterialCommunityIcons, name: "emoticon-neutral-outline", active: "emoticon-neutral" },
+  { lib: Ionicons, name: "happy-outline", active: "happy" }, 
+  { lib: Entypo, name: "emoji-happy", active: "emoji-happy" }, 
 ];
 
 export default function EmojiRating({ value, onChange }) {
