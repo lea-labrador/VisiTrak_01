@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, Text, ScrollView, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router"; // <-- import router
+import { useRouter } from "expo-router"; 
 
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -16,8 +16,13 @@ export default function FeedbackForm() {
   const router = useRouter(); // <-- hook for navigation
 
   const [q1, setQ1] = useState(null);
+  const [q2, setQ2] = useState(null);
   const [q3, setQ3] = useState(null);
   const [q4, setQ4] = useState(null);
+  const [q5, setQ5] = useState(null);
+  const [q6, setQ6] = useState(null);
+  const [q7, setQ7] = useState(null);
+  const [q8, setQ8] = useState(null);
   const [offices, setOffices] = useState({});
   const [suggestion, setSuggestion] = useState("");
 
@@ -27,10 +32,14 @@ export default function FeedbackForm() {
 
   const handleSubmit = () => {
     const data = {
-      satisfaction: q1,
-      officeVisited: Object.keys(offices).filter((k) => offices[k]),
+      responsiveness: q1,
+      reliability: q2,
       cleanliness: q3,
       courteousStaff: q4,
+      courteousStaff: q5,
+      courteousStaff: q6,
+      courteousStaff: q7,
+      courteousStaff: q8,
       suggestion,
     };
 
@@ -58,7 +67,7 @@ export default function FeedbackForm() {
             {/* Q1 */}
             <Question
               number={1}
-              text="Overall, how satisfied are you with your visit to the campus today?"
+              text="Responsiveness (Pag abi-abi)."
             >
               <EmojiRating value={q1} onChange={setQ1} />
             </Question>
@@ -66,47 +75,56 @@ export default function FeedbackForm() {
             {/* Q2 */}
             <Question
               number={2}
-              text="Which area or office did you visit? (Choose one)"
+              text="Reliability (Quality) (Masaligan sa serbisyo)."
             >
-              <View className="flex-row flex-wrap">
-                {[
-                  "Admin Office",
-                  "Registrar",
-                  "Admin",
-                  "SAS Office",
-                  "CCIS Faculty Office",
-                ].map((office) => (
-                  <CheckboxOption
-                    key={office}
-                    label={office}
-                    checked={!!offices[office]}
-                    onChange={() => toggleOffice(office)}
-                  />
-                ))}
-                <CheckboxOption
-                  label="Other"
-                  checked={!!offices["Other"]}
-                  onChange={() => toggleOffice("Other")}
-                />
-              </View>
+              <EmojiRating value={q2} onChange={setQ2} />
             </Question>
 
             {/* Q3 */}
             <Question
               number={3}
-              text="How would you rate the cleanliness and safety of the campus?"
-            >
+              text="Access & Facilities (Sayon tuoron ang opisina, komportable ug maayo ang mga pasilidad).">
               <EmojiRating value={q3} onChange={setQ3} />
             </Question>
 
             {/* Q4 */}
-            <Question number={4} text="Were the staff courteous and helpful?">
+            <Question 
+              number={4} 
+              text="Communication (Pamaagi sa pag pasabot).">
               <EmojiRating value={q4} onChange={setQ4} />
             </Question>
 
             {/* Q5 */}
+            <Question 
+              number={5} 
+              text="Costs (Kantidad sa balayrunon).">
+              <EmojiRating value={q5} onChange={setQ5} />
+            </Question>
+
+            {/* Q6 */}
+            <Question 
+              number={6} 
+              text="Integrity (Matinud-anun, makiangayon, ug patas).">
+              <EmojiRating value={q6} onChange={setQ6} />
+            </Question>
+
+            {/* Q7 */}
+            <Question 
+              number={7} 
+              text="Assurance (Kapaniguruan sa serbisyo).">
+              <EmojiRating value={q7} onChange={setQ7} />
+            </Question>
+
+            {/* Q8 */}
+            <Question 
+              number={8} 
+              text="Outcome (Naangkong ang husto  nga serbisyo).">
+              <EmojiRating value={q8} onChange={setQ8} />
+            </Question>
+
+            {/* Q9 */}
             <Question
-              number={5}
+              number={9}
               text="Do you have any suggestions or comments to help us improve?"
             >
               <TextArea value={suggestion} onChange={setSuggestion} />
