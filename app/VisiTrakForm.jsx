@@ -16,7 +16,6 @@ import Footer from "../components/Footer";
 import SectionTitle from "../components/SectionTitle";
 import InputField from "../components/InputField";
 import SelectField from "../components/SelectField";
-import EmojiRating from "../components/EmojiRating";
 
 import backG1 from "../assets/images/header-bg4.png";
 

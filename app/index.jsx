@@ -10,8 +10,6 @@ import React, { useState, useEffect } from "react";
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import Footer from "../components/Footer"
-
 // Import images
 import backG1 from "../assets/images/backG1.png";
 import backG2 from "../assets/images/backG2.png";
@@ -45,15 +43,15 @@ const HomeScreen = () => {
         className="items-center justify-center px-5"
       >
         {/* Logos Inline */}
-        <View className="flex-row items-center justify-center mb-6 space-x-6">
+        <View className="flex-row items-center justify-center mb-6">
           <Image
             source={bisuLogo}
-            className="mr-3 w-20 h-20"
+            style={{ width: 80, height: 80, marginRight: 12 }}
             resizeMode="contain"
           />
           <Image
             source={creativeLogo}
-            className="w-20 h-20"
+            style={{ width: 80, height: 80 }}
             resizeMode="contain"
           />
         </View>
@@ -87,7 +85,7 @@ const HomeScreen = () => {
             </Pressable>
           </Link>
 
-          <Link href="/ExitScreen" asChild>
+          <Link href="/ScanScreenOut" asChild>
             <Pressable
               className={`h-14 ${
                 isPhone ? "w-full" : "flex-1 mx-1"

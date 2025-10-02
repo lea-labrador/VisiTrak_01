@@ -1,7 +1,7 @@
 // screens/EntryScreen.js
 import { View, Text, ImageBackground, Image, Pressable, SafeAreaView, StatusBar } from "react-native";
 import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
-import { Link } from "expo-router"; // ✅ Correct import
+import { Link } from "expo-router";
 import Card from "../components/Card";
 import Divider from "../components/Divider";
 import Logos from "../components/Logos";
@@ -41,7 +41,7 @@ export default function EntryScreen() {
                 {/* QR Placeholder */}
                 <View className="w-40 h-40 bg-white rounded-lg justify-center items-center mb-6">
                   <Image
-                    source={require("../assets/images/qr-sample.png")}
+                    source={require("../assets/images/VisitorOut_QR.png")}
                     className="w-36 h-36"
                     resizeMode="contain"
                   />

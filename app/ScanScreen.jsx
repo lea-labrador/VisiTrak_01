@@ -1,7 +1,7 @@
 // screens/EntryScreen.js
 import { View, Text, ImageBackground, Image, Pressable, SafeAreaView, StatusBar } from "react-native";
 import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
-import { Link } from "expo-router"; // ✅ Correct import
+import { Link } from "expo-router"; 
 import Card from "../components/Card";
 import Divider from "../components/Divider";
 import Logos from "../components/Logos";
@@ -12,16 +12,15 @@ export default function EntryScreen() {
   return (
     <ImageBackground
       source={require("../assets/images/backG1.png")}
-      className="flex-1"
+      style={{ flex: 1 }} // ✅ required for web
       resizeMode="cover"
     >
-      {/* Safe area wrapper prevents overlap with system top bar */}
-      <SafeAreaView className="flex-1">
-        <View className="flex-1">
-          {/* 🔹 Header stays fixed at top */}
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          {/* Header */}
           <View
             className="px-6"
-            style={{ paddingTop: StatusBar.currentHeight || 0 }}
+            style={{ paddingTop: StatusBar.currentHeight ?? 0 }}
           >
             <Header title="VisiTrak" />
           </View>
@@ -29,10 +28,8 @@ export default function EntryScreen() {
           {/* Main Content */}
           <View className="flex-1 justify-center px-6">
             <Card>
-              {/* Logos inside the card (aligned to right) */}
               <Logos />
 
-              {/* Card Body */}
               <View className="items-center mt-4">
                 <Text className="text-white text-lg font-semibold mb-4">
                   Scan QR Code
@@ -41,8 +38,8 @@ export default function EntryScreen() {
                 {/* QR Placeholder */}
                 <View className="w-40 h-40 bg-white rounded-lg justify-center items-center mb-6">
                   <Image
-                    source={require("../assets/images/qr-sample.png")}
-                    className="w-36 h-36"
+                    source={require("../assets/images/VisitorIn_QR.png")}
+                    style={{ width: 144, height: 144 }} // ✅ safe sizing
                     resizeMode="contain"
                   />
                 </View>
@@ -68,7 +65,7 @@ export default function EntryScreen() {
             </Card>
           </View>
 
-          {/* Footer - always at bottom */}
+          {/* Footer */}
           <View className="pb-4">
             <Footer />
           </View>
