@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 
-import Header from "../components/Header";
+import Header from "../components/Satisfaction_header";
 import Question from "../components/Question";
 import EmojiRating from "../components/EmojiRating";
 

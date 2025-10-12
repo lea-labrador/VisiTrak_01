@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Text,
   View,
@@ -17,7 +17,9 @@ import SectionTitle from "../components/SectionTitle";
 import InputField from "../components/InputField";
 import SelectField from "../components/SelectField";
 
-import backG1 from "../assets/images/header-bg4.png";
+import backG01 from "../assets/images/backG01.png";
+import backG02 from "../assets/images/backG02.png";
+import backG03 from "../assets/images/backG03.png";
 
 export default function VisiTrakForm() {
   const router = useRouter();
@@ -30,12 +32,22 @@ export default function VisiTrakForm() {
   const [contactNumber, setContactNumber] = useState("");
   const [email, setEmail] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const [emojiRating, setEmojiRating] = useState(0); // 1-5 for backend
+  const [emojiRating] = useState(0); // 1–5 for backend
 
   const purposes = ["COR/TOR", "Medical", "Delivery", "Maintenance", "Other"];
   const offices = ["Registrar", "Clinic", "Finance Office", "IT Support", "Management"];
 
-  // Generate 6-character alphanumeric exit key
+  // 🔄 Carousel logic
+  const images = [backG01, backG02, backG03];
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
   const generateExitKey = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     return Array.from({ length: 6 }, () =>
@@ -56,7 +68,6 @@ export default function VisiTrakForm() {
     const exitKey = generateExitKey();
     const checkInTime = new Date().toLocaleTimeString();
 
-    // Navigate to summary screen using Expo Router
     router.push({
       pathname: "/CheckInSummary",
       params: {
@@ -75,46 +86,73 @@ export default function VisiTrakForm() {
   return (
     <LinearGradient colors={["#1A237E", "#3949AB", "#5C6BC0"]} className="flex-1">
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        {/* Header */}
-        <ImageBackground source={backG1} className="w-full h-64 px-9 pt-8">
-          <View className="flex-1">
-            <Header title="VisiTrak" />
-            <Text className="text-white font-bold text-2xl mt-4 tracking-wide">
-              Your Visit Matters
-            </Text>
-            <Text className="text-white text-lg mt-1">
-              Thank you for being part of our vibrant community!
-            </Text>
-            <View className="absolute -bottom-8 self-center">
-              <View className="flex-1 w-20 h-20 rounded-full bg-white justify-center items-center border-2 border-blue-500">
-                <Ionicons name="person" size={32} color="#1a3c9e" />
+        <View className="w-full h-64">
+          <ImageBackground
+            source={images[currentIndex]}
+            resizeMode="cover"
+            className="w-full h-64 px-9 pt-8"
+          >
+            <View className="flex-1">
+              <Header title="VisiTrak" />
+              <Text className="text-white font-bold text-2xl mt-4 tracking-wide">
+                Your Visit Matters
+              </Text>
+              <Text className="text-white text-lg mt-1">
+                Thank you for being part of our vibrant community!
+              </Text>
+
+              {/* Avatar Circle */}
+              <View className="absolute -bottom-8 self-center">
+                <View className="flex-1 w-20 h-20 rounded-full bg-white justify-center items-center border-2 border-blue-500">
+                  <Ionicons name="person" size={32} color="#1a3c9e" />
+                </View>
               </View>
             </View>
+          </ImageBackground>
+
+          {/* Carousel Indicators */}
+          <View className="absolute bottom-2 left-0 right-0 flex-row justify-center space-x-2">
+            {images.map((_, index) => (
+              <View
+                key={index}
+                className={`w-2.5 h-2.5 rounded-full ${
+                  index === currentIndex ? "bg-white" : "bg-white/40"
+                }`}
+              />
+            ))}
           </View>
-        </ImageBackground>
+        </View>
 
         {/* Personal Info */}
         <View className="mt-24 px-9">
-          <SectionTitle icon={<Ionicons name="person" size={20} color="#b6b6b6" />} text="Personal Information" />
+          <SectionTitle
+            icon={<Ionicons name="person" size={20} color="#b6b6b6" />}
+            text="Personal Information"
+          />
           <View className="bg-white/10 border-2 border-indigo-400 rounded-xl p-6">
             <InputField
               icon={<Ionicons name="person-outline" size={20} color="#0a3aca" />}
               placeholder="Full Name"
               value={fullName}
               onChangeText={setFullName}
+              uppercase 
             />
             <InputField
               icon={<Ionicons name="home-outline" size={20} color="#0a3aca" />}
               placeholder="Home Address"
               value={homeAddress}
               onChangeText={setHomeAddress}
+              uppercase
             />
           </View>
         </View>
 
         {/* Visit Info */}
         <View className="mt-8 px-9">
-          <SectionTitle icon={<Ionicons name="location-outline" size={20} color="#b6b6b6" />} text="Visit Information" />
+          <SectionTitle
+            icon={<Ionicons name="location-outline" size={20} color="#b6b6b6" />}
+            text="Visit Information"
+          />
           <View className="bg-white/10 border-2 border-indigo-400 rounded-xl p-6">
             <SelectField
               icon={<Ionicons name="newspaper-outline" size={20} color="#0a3aca" />}
@@ -135,13 +173,17 @@ export default function VisiTrakForm() {
 
         {/* Contact Info */}
         <View className="mt-8 px-9">
-          <SectionTitle icon={<MaterialIcons name="contact-phone" size={18} color="#fff" />} text="Contact Information" />
+          <SectionTitle
+            icon={<MaterialIcons name="contact-phone" size={18} color="#fff" />}
+            text="Contact Information"
+          />
           <View className="bg-white/10 border-2 border-indigo-400 rounded-xl p-6">
             <InputField
               icon={<Entypo name="phone" size={16} color="#0a3aca" />}
               placeholder="Contact Number"
               value={contactNumber}
               onChangeText={setContactNumber}
+              uppercase // 🔠
             />
             <InputField
               icon={<Entypo name="email" size={16} color="#0a3aca" />}
@@ -152,7 +194,6 @@ export default function VisiTrakForm() {
           </View>
         </View>
 
-
         {/* Terms */}
         <View className="flex-row items-center mt-6 mb-2 px-12">
           <Checkbox
@@ -161,9 +202,12 @@ export default function VisiTrakForm() {
             color={agreeTerms ? "#3949AB" : undefined}
             className="mr-2"
           />
-          <Text className="text-white flex-1 flex-wrap">
+          <Text className="text-white flex-1 flex-wrap text-sm">
             I have read and agree to the{" "}
-            <Text className="text-black underline font-medium" onPress={() => alert("Show Terms and Conditions")}>
+            <Text
+              className="text-black underline font-medium"
+              onPress={() => alert("Show Terms and Conditions")}
+            >
               Terms and Conditions
             </Text>
           </Text>
@@ -174,7 +218,9 @@ export default function VisiTrakForm() {
           onPress={onSubmit}
           className="h-14 w-11/12 mx-auto mt-6 mb-6 rounded-xl bg-indigo-900 justify-center items-center shadow-lg"
         >
-          <Text className="text-white text-lg font-bold tracking-wide">Submit Registration</Text>
+          <Text className="text-white text-lg font-bold tracking-wide">
+            Submit Registration
+          </Text>
         </Pressable>
 
         <Footer />
