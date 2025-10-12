@@ -1,52 +1,37 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Alert } from "react-native";
+import { View, Text, TextInput, ScrollView, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router"; 
+import { useRouter } from "expo-router";
+import { Feather } from "@expo/vector-icons";
 
 import Header from "../components/Header";
-import Footer from "../components/Footer";
 import Question from "../components/Question";
 import EmojiRating from "../components/EmojiRating";
-import CheckboxOption from "../components/CheckboxOption";
-import TextArea from "../components/TextArea";
-import PrimaryButton from "../components/PrimaryButton";
+
+const questions = [
+  "Responsiveness (Pag abi-abi).",
+  "Reliability (Kalig-on sa serbisyo).",
+  "Access & Facilities (Sayon tuoran ang opisina, komportable ug maayo ang mga pasilidad).",
+  "Communication (Pamagi sa pag pasabot).",
+  "Costs (Klaridad sa balayaran).",
+  "Integrity (Matinud-anon, makiangayon, ug patas).",
+  "Assurance (Kasiguruhan sa serbisyo).",
+  "Outcome (Nanghatag ang hustong serbisyo).",
+];
 
 export default function FeedbackForm() {
-  const router = useRouter(); // <-- hook for navigation
-
-  const [q1, setQ1] = useState(null);
-  const [q2, setQ2] = useState(null);
-  const [q3, setQ3] = useState(null);
-  const [q4, setQ4] = useState(null);
-  const [q5, setQ5] = useState(null);
-  const [q6, setQ6] = useState(null);
-  const [q7, setQ7] = useState(null);
-  const [q8, setQ8] = useState(null);
-  const [offices, setOffices] = useState({});
+  const router = useRouter();
+  const [answers, setAnswers] = useState({});
   const [suggestion, setSuggestion] = useState("");
 
-  const toggleOffice = (office) => {
-    setOffices((prev) => ({ ...prev, [office]: !prev[office] }));
+  const handleAnswer = (number, value) => {
+    setAnswers((prev) => ({ ...prev, [number]: value }));
   };
 
   const handleSubmit = () => {
-    const data = {
-      responsiveness: q1,
-      reliability: q2,
-      cleanliness: q3,
-      courteousStaff: q4,
-      courteousStaff: q5,
-      courteousStaff: q6,
-      courteousStaff: q7,
-      courteousStaff: q8,
-      suggestion,
-    };
-
-    // // Optional: Debug alert
-    // Alert.alert("Feedback Submitted", JSON.stringify(data, null, 2));
-
-    // Navigate to ThankYouScreen
+    const formData = { answers, suggestion };
+    console.log("Feedback submitted:", formData);
     router.push("/ThankYouScreen");
   };
 
@@ -56,86 +41,64 @@ export default function FeedbackForm() {
       className="flex-1"
     >
       <SafeAreaView className="flex-1">
+        <Header title="VisiTrak" />
+
         <ScrollView
           contentContainerStyle={{ paddingBottom: 24 }}
           className="flex-1 px-6 py-6"
         >
-          <Header title="VisiTrak" />
+          <View className="bg-[#eaddc3] rounded-2xl p-6 shadow-md">
+            <Text className="text-2xl font-bold mb-6 text-center">
+              Give Feedback
+            </Text>
 
-          {/* Feedback Card */}
-          <View className="bg-white rounded-2xl p-6 shadow-md mt-10">
-            {/* Q1 */}
-            <Question
-              number={1}
-              text="Responsiveness (Pag abi-abi)."
+            {questions.map((text, index) => (
+              <Question key={index} number={index + 1} text={text}>
+                <EmojiRating
+                  value={answers[index + 1]}
+                  onChange={(value) => handleAnswer(index + 1, value)}
+                />
+              </Question>
+            ))}
+
+            {/* 💬 Suggestion Text Field (Enhanced Styling) */}
+            <View className="mt-6">
+              <Text className="font-semibold mb-2 text-gray-800">
+                Do you have any suggestions or comments to help us improve?
+              </Text>
+
+              <View className="bg-white rounded-xl border border-gray-300 shadow-sm">
+                <TextInput
+                  multiline
+                  textAlignVertical="top"
+                  placeholder="Write your suggestion here..."
+                  value={suggestion}
+                  onChangeText={setSuggestion}
+                  className="p-4 text-gray-700 text-base min-h-[120px]"
+                />
+              </View>
+
+              {/* Optional character counter (can remove if not needed) */}
+              <Text className="text-right text-gray-500 text-xs mt-1">
+                {suggestion.length}/300
+              </Text>
+            </View>
+
+            {/* 🚀 Submit Button */}
+            <Pressable
+              onPress={handleSubmit}
+              className="w-full bg-blue-900 py-3 rounded-md mt-6"
             >
-              <EmojiRating value={q1} onChange={setQ1} />
-            </Question>
+              <Text className="text-white text-center font-semibold">
+                SUBMIT FEEDBACK
+              </Text>
+            </Pressable>
 
-            {/* Q2 */}
-            <Question
-              number={2}
-              text="Reliability (Quality) (Masaligan sa serbisyo)."
-            >
-              <EmojiRating value={q2} onChange={setQ2} />
-            </Question>
-
-            {/* Q3 */}
-            <Question
-              number={3}
-              text="Access & Facilities (Sayon tuoron ang opisina, komportable ug maayo ang mga pasilidad).">
-              <EmojiRating value={q3} onChange={setQ3} />
-            </Question>
-
-            {/* Q4 */}
-            <Question 
-              number={4} 
-              text="Communication (Pamaagi sa pag pasabot).">
-              <EmojiRating value={q4} onChange={setQ4} />
-            </Question>
-
-            {/* Q5 */}
-            <Question 
-              number={5} 
-              text="Costs (Kantidad sa balayrunon).">
-              <EmojiRating value={q5} onChange={setQ5} />
-            </Question>
-
-            {/* Q6 */}
-            <Question 
-              number={6} 
-              text="Integrity (Matinud-anun, makiangayon, ug patas).">
-              <EmojiRating value={q6} onChange={setQ6} />
-            </Question>
-
-            {/* Q7 */}
-            <Question 
-              number={7} 
-              text="Assurance (Kapaniguruan sa serbisyo).">
-              <EmojiRating value={q7} onChange={setQ7} />
-            </Question>
-
-            {/* Q8 */}
-            <Question 
-              number={8} 
-              text="Outcome (Naangkong ang husto  nga serbisyo).">
-              <EmojiRating value={q8} onChange={setQ8} />
-            </Question>
-
-            {/* Q9 */}
-            <Question
-              number={9}
-              text="Do you have any suggestions or comments to help us improve?"
-            >
-              <TextArea value={suggestion} onChange={setSuggestion} />
-            </Question>
-
-            {/* Submit Button */}
-            <PrimaryButton title="SUBMIT FEEDBACK" onPress={handleSubmit} />
+            <Text className="text-center text-gray-500 text-sm mt-4">
+              © 2025 LMT. All rights reserved.
+            </Text>
           </View>
         </ScrollView>
-
-        <Footer />
       </SafeAreaView>
     </LinearGradient>
   );

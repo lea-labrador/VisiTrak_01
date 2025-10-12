@@ -12,7 +12,7 @@ export default function EntryScreen() {
   return (
     <ImageBackground
       source={require("../assets/images/backG1.png")}
-      style={{ flex: 1 }} // ✅ required for web
+      style={{ flex: 1 }} 
       resizeMode="cover"
     >
       <SafeAreaView style={{ flex: 1 }}>
@@ -39,7 +39,7 @@ export default function EntryScreen() {
                 <View className="w-40 h-40 bg-white rounded-lg justify-center items-center mb-6">
                   <Image
                     source={require("../assets/images/VisitorIn_QR.png")}
-                    style={{ width: 144, height: 144 }} // ✅ safe sizing
+                    style={{ width: 144, height: 144 }}
                     resizeMode="contain"
                   />
                 </View>

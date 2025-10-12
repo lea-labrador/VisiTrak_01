@@ -59,7 +59,7 @@ export default function EntryScreen() {
                       color="black"
                     />
                     <Text className="text-base font-semibold ml-2 px-3">
-                      Start Registration
+                      Exit without QR
                     </Text>
                     <Feather name="arrow-right" size={20} color="black" />
                   </Pressable>

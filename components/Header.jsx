@@ -7,7 +7,7 @@ export default function Header({ title }) {
   return (
     <View className="flex-row items-center mb-2">
       <Link href="/" asChild>
-        <Pressable className="w-11 bg-white/20 rounded-lg p-2 justify-center items-center border-2 border-gray-500 shadow-md">
+        <Pressable className="w-11 bg-white/20 rounded-lg p-2 justify-center items-center border-2 border-gray-500 shadow-md ml-5">
           <Ionicons name="chevron-back" size={24} color="white" />
         </Pressable>
       </Link>

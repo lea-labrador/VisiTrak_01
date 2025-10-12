@@ -10,7 +10,7 @@ export default function Header() {
         resizeMode="contain"
       />
       <Image
-        source={require("../assets/images/creative-logo.png")}
+        source={require("../assets/images/VT_logo.png")}
         className="w-16 h-6"
         resizeMode="contain"
       />

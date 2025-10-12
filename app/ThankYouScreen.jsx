@@ -1,19 +1,22 @@
-import { View, Text, Pressable, ImageBackground } from "react-native";
+import { View, Text, Pressable, ImageBackground, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+
 
 export default function ThankYouScreen() {
   const navigation = useNavigation();
 
   return (
     <ImageBackground
-      source={require("../assets/images/backG1.png")} // put your gradient background here
+      source={require("../assets/images/thankYou_bg1.png")} // put your gradient background here
       className="flex-1 justify-center items-center px-6"
       resizeMode="cover"
     >
       {/* Illustration */}
-      <View className="bg-white/10 rounded-full p-6 mb-6">
-        <Text className="text-5xl">✅</Text>
-      </View>
+      <Image
+        source={require("../assets/images/thank_youBG3.png")}
+        className="w-64 h-64 mb-6"
+        resizeMode="contain"
+      />
 
       {/* Title */}
       <Text className="text-white text-2xl font-bold mb-2">THANK YOU!</Text>
