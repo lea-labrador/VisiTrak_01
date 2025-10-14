@@ -41,7 +41,7 @@ export default function EntryScreen() {
                 {/* QR Placeholder */}
                 <View className="w-40 h-40 bg-white rounded-lg justify-center items-center mb-6">
                   <Image
-                    source={require("../assets/images/SATISFACTION_QR.png")}
+                    source={require("../assets/images/qr-out.png")}
                     className="w-36 h-36"
                     resizeMode="contain"
                   />

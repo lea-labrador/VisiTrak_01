@@ -10,8 +10,8 @@ export default function Logos() {
         resizeMode="contain"
       />
       <Image
-        source={require("../assets/images/creative-logo.png")}
-        className="w-16 h-6 mt-2 ml-2"
+        source={require("../assets/images/logo02.png")}
+        className="w-16 h-5 mt-2"
         resizeMode="contain"
       />
     </View>

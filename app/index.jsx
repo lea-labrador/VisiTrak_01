@@ -1,11 +1,4 @@
-import {
-  View,
-  Text,
-  ImageBackground,
-  Pressable,
-  Image,
-  useWindowDimensions,
-} from "react-native";
+import { View, Text, ImageBackground, Pressable,Image,useWindowDimensions,} from "react-native";
 import React, { useState, useEffect } from "react";
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,7 +8,7 @@ import backG1 from "../assets/images/backG1.png";
 import backG2 from "../assets/images/backG2.png";
 import backG3 from "../assets/images/backG3.png";
 import bisuLogo from "../assets/images/bisu-logo.png";
-import creativeLogo from "../assets/images/creative-logo.png"; // add your creative logo file
+import creativeLogo from "../assets/images/logo02.png"; 
 
 const backgroundImages = [backG1, backG2, backG3];
 
@@ -31,8 +24,8 @@ const HomeScreen = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Check if screen is small (phone)
-  const isPhone = width < 600; // adjust threshold for your needs
+  // Determine if the device is a phone based on width
+  const isPhone = width < 600;
 
   return (
     <SafeAreaView style={{ flex: 1 }} className="bg-black">
@@ -51,7 +44,7 @@ const HomeScreen = () => {
           />
           <Image
             source={creativeLogo}
-            style={{ width: 80, height: 80 }}
+            style={{ width: 60, height: 60 }}
             resizeMode="contain"
           />
         </View>

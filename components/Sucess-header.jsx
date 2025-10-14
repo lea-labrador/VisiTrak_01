@@ -13,7 +13,7 @@ export default function Header({ title }) {
 
       {/* Forward Button (top-right) */}
       <Pressable
-        onPress={() => router.push("/satisfaction")}
+        onPress={() => router.push("/")}
         className="absolute right-4 w-11 bg-white/20 rounded-lg p-2 justify-center items-center border-2 border-gray-500 shadow-md active:bg-white/30"
       >
         <Ionicons name="chevron-forward" size={24} color="white" />
