@@ -47,7 +47,7 @@ export default function FeedbackForm() {
           contentContainerStyle={{ paddingBottom: 24 }}
           className="flex-1 px-6 py-6"
         >
-          <View className="bg-[#eaddc3] rounded-2xl p-6 shadow-md">
+          <View className="bg-[#F2F2F2] rounded-2xl p-6 shadow-md">
             <Text className="text-2xl font-bold mb-6 text-center">
               Give Feedback
             </Text>

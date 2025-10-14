@@ -10,6 +10,15 @@ const icons = [
   { lib: Entypo, name: "emoji-happy", active: "emoji-happy" },
 ];
 
+// Map number to satisfaction label
+const satisfactionLabels = [
+  "Very Dissatisfied",
+  "Dissatisfied",
+  "Neutral",
+  "Satisfied",
+  "Very Satisfied",
+];
+
 export default function EmojiRating({ value, onChange }) {
   const [notApplicable, setNotApplicable] = useState(false);
   const { width } = useWindowDimensions();
@@ -103,7 +112,7 @@ export default function EmojiRating({ value, onChange }) {
         {notApplicable
           ? "Not Applicable selected"
           : value > 0
-          ? `You selected: ${value}`
+          ? `You selected: ${satisfactionLabels[value - 1]}`
           : "No rating yet"}
       </Text>
     </View>
