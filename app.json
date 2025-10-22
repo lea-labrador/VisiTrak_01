@@ -4,7 +4,7 @@
     "slug": "visitrak",
     "version": "1.0.0",
     "orientation": "default",
-    "icon": "./assets/images/icon.png",
+    // "icon": "./assets/images/icon.png",
     "scheme": "visitrak",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -21,8 +21,12 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.CAMERA"
-      ]
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.lea_l.visitrak"
     },
     "web": {
       "output": "static",
@@ -41,7 +45,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          // "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
