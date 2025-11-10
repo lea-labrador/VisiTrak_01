@@ -9,7 +9,7 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 
 export default function EntryScreen() {
-  return (
+  return ( 
     <ImageBackground
       source={require("../assets/images/backG1.png")}
       className="flex-1"

@@ -41,7 +41,7 @@ export default function VisiTrakForm() {
 
   const onSubmit = () => {
     if (!agreeTerms) {
-      alert("Please agree to the Terms and Conditions");
+      alert("Please agree to the Terms and Conditions and Privacy Policy");
       return;
     }
     if (!fullName || !purpose || !office || !contactNumber) {

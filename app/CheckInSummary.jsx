@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, ScrollView, useWindowDimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
@@ -9,18 +9,43 @@ import Footer from "../components/Footer";
 
 export default function CheckInSummary() {
   const { name, exitKey, checkInTime, office } = useLocalSearchParams();
+  const { width, height } = useWindowDimensions();
+
+  // Scale factor — dynamically adjusts based on screen size
+  const scale = Math.min(Math.max(width / 400, 0.8), 1.6);
+  const isTablet = width >= 768;
+
+  // Responsive sizes
+  const sizes = {
+    paddingVertical: 40 * scale,
+    paddingHorizontal: 16 * scale,
+    messageFont: 22 * scale,
+    messageSpacing: 28 * scale,
+  };
 
   return (
     <LinearGradient
       colors={["#1A237E", "#3949AB", "#5C6BC0"]}
-      className="flex-1"
+      style={{ flex: 1 }}
     >
-      <SafeAreaView className="flex-1">
+      <SafeAreaView style={{ flex: 1 }}>
         {/* ✅ Header */}
-        <Header title="VisiTrak" />
+        <View style={{ paddingHorizontal: 10 * scale }}>
+          <Header title="VisiTrak" />
+        </View>
 
-        {/* ✅ Main Content */}
-        <View className="flex-1 items-center justify-center px-4">
+        {/* ✅ Scrollable Main Content */}
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            paddingVertical: sizes.paddingVertical,
+            paddingHorizontal: sizes.paddingHorizontal,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* ✅ Success Card */}
           <SuccessCard
             name={name || "Guest Visitor"}
             exitKey={exitKey || "N/A"}
@@ -29,12 +54,19 @@ export default function CheckInSummary() {
           />
 
           {/* ✅ Message */}
-          <View className="mt-7">
-            <Text className="text-center text-white text-2xl font-semibold">
+          <View style={{ marginTop: sizes.messageSpacing }}>
+            <Text
+              style={{
+                textAlign: "center",
+                color: "white",
+                fontSize: sizes.messageFont,
+                fontWeight: "600",
+              }}
+            >
               Have a great visit!
             </Text>
           </View>
-        </View>
+        </ScrollView>
 
         {/* ✅ Footer */}
         <Footer />

@@ -1,4 +1,4 @@
-import { View, Text, ImageBackground, Pressable,Image,useWindowDimensions,} from "react-native";
+import { View, Text, ImageBackground, Pressable, Image, useWindowDimensions } from "react-native";
 import React, { useState, useEffect } from "react";
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,71 +8,113 @@ import backG1 from "../assets/images/backG1.png";
 import backG2 from "../assets/images/backG2.png";
 import backG3 from "../assets/images/backG3.png";
 import bisuLogo from "../assets/images/bisu-logo.png";
-import creativeLogo from "../assets/images/logo02.png"; 
+import creativeLogo from "../assets/images/logo02.png";
 
-const backgroundImages = [backG1, backG2, backG3];
+const backgroundImages = [backG1, backG2, backG3]; 
 
 const HomeScreen = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { width } = useWindowDimensions();
 
-  // Autoplay background images
+  // Auto-play background images
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
+      setCurrentIndex((prev) => (prev + 1) % backgroundImages.length);
     }, 4000);
     return () => clearInterval(interval);
   }, []);
 
-  // Determine if the device is a phone based on width
+  // Scale factor (for responsive sizes)
+  const scale = Math.min(Math.max(width / 400, 0.8), 1.8);
   const isPhone = width < 600;
 
+  // Responsive size values
+  const sizes = {
+    bisuLogo: 50 * scale,
+    creativeLogo: 45 * scale,
+    titleFont: 30 * scale,
+    subtitleFont: 15 * scale,
+    descFont: 12 * scale,
+    buttonFont: 20 * scale,
+    buttonHeight: 40 * scale,
+    buttonWidth: isPhone ? "100%" : 135 * scale, 
+    footerFont: 10 * scale,
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1 }} className="bg-black">
+    <SafeAreaView className="flex-1 bg-black">
       <ImageBackground
         source={backgroundImages[currentIndex]}
         resizeMode="cover"
-        style={{ flex: 1 }}
-        className="items-center justify-center px-5"
+        className="flex-1 items-center justify-center px-5"
       >
-        {/* Logos Inline */}
+        {/* Logos */}
         <View className="flex-row items-center justify-center mb-6">
           <Image
             source={bisuLogo}
-            style={{ width: 80, height: 80, marginRight: 12 }}
+            className="mr-3"
+            style={{
+              width: sizes.bisuLogo,
+              height: sizes.bisuLogo,
+            }}
             resizeMode="contain"
           />
           <Image
             source={creativeLogo}
-            style={{ width: 60, height: 60 }}
+            style={{
+              width: sizes.creativeLogo,
+              height: sizes.creativeLogo,
+            }}
             resizeMode="contain"
           />
         </View>
 
-        {/* Title */}
-        <Text className="text-white text-xl text-center mb-1">Welcome to</Text>
-        <Text className="text-white text-3xl md:text-5xl font-bold text-center tracking-wide mb-3">
+        {/* Texts */}
+        <Text
+          className="text-white text-center mb-1"
+          style={{ fontSize: sizes.subtitleFont }}
+        >
+          Welcome to
+        </Text>
+
+        <Text
+          className="text-white font-bold text-center tracking-wide mb-3"
+          style={{ fontSize: sizes.titleFont }}
+        >
           BISU BALILIHAN
         </Text>
-        <Text className="text-white text-base md:text-lg text-center mb-10 leading-6 px-3">
+
+        <Text
+          className="text-white text-center px-3 mb-10"
+          style={{
+            fontSize: sizes.descFont,
+            lineHeight: sizes.descFont * 1.5,
+          }}
+        >
           Please register your visit by providing the required information.
         </Text>
 
-        {/* Buttons - responsive layout */}
+        {/* Buttons */}
         <View
-          className="w-11/12 max-w-xl"
+          className="w-11/12 max-w-xl flex-row flex-wrap justify-center"
           style={{
             flexDirection: isPhone ? "column" : "row",
-            justifyContent: isPhone ? "center" : "space-between",
+            alignItems: "center",
           }}
         >
           <Link href="/ScanScreen" asChild>
             <Pressable
-              className={`h-14 ${
-                isPhone ? "w-full mb-4" : "flex-1 mx-1"
-              } rounded-xl border-2 border-orange-400 bg-white/20 justify-center items-center shadow-md`}
+              className="rounded-xl border-2 border-orange-400 bg-white/20 justify-center items-center shadow-md mb-4"
+              style={{
+                width: sizes.buttonWidth,
+                height: sizes.buttonHeight,
+                marginRight: isPhone ? 0 : 15,
+              }}
             >
-              <Text className="text-white text-2xl font-bold tracking-wide">
+              <Text
+                className="text-white font-bold tracking-wide"
+                style={{ fontSize: sizes.buttonFont }}
+              >
                 VISITOR IN
               </Text>
             </Pressable>
@@ -80,11 +122,16 @@ const HomeScreen = () => {
 
           <Link href="/ScanScreenOut" asChild>
             <Pressable
-              className={`h-14 ${
-                isPhone ? "w-full" : "flex-1 mx-1"
-              } rounded-xl border-2 border-orange-400 bg-white/20 justify-center items-center shadow-md`}
+              className="rounded-xl border-2 border-orange-400 bg-white/20 justify-center items-center shadow-md"
+              style={{
+                width: sizes.buttonWidth,
+                height: sizes.buttonHeight,
+              }}
             >
-              <Text className="text-white text-2xl font-bold tracking-wide">
+              <Text
+                className="text-white font-bold tracking-wide"
+                style={{ fontSize: sizes.buttonFont }}
+              >
                 VISITOR OUT
               </Text>
             </Pressable>
@@ -92,8 +139,11 @@ const HomeScreen = () => {
         </View>
 
         {/* Footer */}
-        <Text className="absolute bottom-5 text-center text-xs text-gray-300 tracking-wide">
-          © 2025 LMT. All rights reserved.
+        <Text
+          className="absolute bottom-5 text-center text-gray-300 tracking-wide"
+          style={{ fontSize: sizes.footerFont }}
+        >
+          &copy; 2025 LMT. All rights reserved.
         </Text>
       </ImageBackground>
     </SafeAreaView>
