@@ -1,24 +1,58 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function Header({ title }) {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+
+  // 📏 Scale factor based on device width
+  const isLarge = width > 800;
+  const isTablet = width > 600 && width <= 800;
+  const scale = isLarge ? 1.4 : isTablet ? 1.2 : 1;
 
   return (
-    <View className="relative flex-row items-center justify-center py-6 px-4">
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 16 * scale,
+        paddingHorizontal: 16 * scale,
+        position: "relative",
+      }}
+    >
       {/* Title */}
-      <Text className="text-white text-3xl font-bold text-center">{title}</Text>
+      <Text
+        style={{
+          color: "white",
+          fontSize: 24 * scale,
+          fontWeight: "bold",
+          textAlign: "center",
+        }}
+      >
+        {title}
+      </Text>
 
       {/* Forward Button (top-right) */}
       <Pressable
         onPress={() => router.push("/")}
-        className="absolute right-4 w-11 bg-white/20 rounded-lg p-2 justify-center items-center border-2 border-gray-500 shadow-md active:bg-white/30"
+        style={{
+          position: "absolute",
+          right: 16 * scale,
+          width: 44 * scale,
+          height: 44 * scale,
+          backgroundColor: "rgba(255,255,255,0.2)",
+          borderRadius: 12 * scale,
+          justifyContent: "center",
+          alignItems: "center",
+          borderWidth: 2,
+          borderColor: "#6B7280",
+        }}
       >
-        <Ionicons name="chevron-forward" size={24} color="white" />
+        <Ionicons name="chevron-forward" size={24 * scale} color="white" />
       </Pressable>
     </View>
   );
 }
- 

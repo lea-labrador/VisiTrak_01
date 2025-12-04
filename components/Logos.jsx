@@ -40,7 +40,7 @@ export default function Logos() {
         }}
       />
       <Image
-        source={require("../assets/images/logo02.png")}
+        source={require("../assets/images/vlogo01.png")}
         style={{
           width: sizes.logo02.width,
           height: sizes.logo02.height,

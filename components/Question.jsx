@@ -10,4 +10,4 @@ export default function Question({ number, text, children }) {
     </View>
   );
 }
- 
+  

@@ -4,11 +4,11 @@ import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Import images
-import backG1 from "../assets/images/backG1.png";
-import backG2 from "../assets/images/backG2.png";
-import backG3 from "../assets/images/backG3.png";
+import backG1 from "../assets/images/BG009.png";
+import backG2 from "../assets/images/BG010.png";
+import backG3 from "../assets/images/BG011.png";
 import bisuLogo from "../assets/images/bisu-logo.png";
-import creativeLogo from "../assets/images/logo02.png";
+import creativeLogo from "../assets/images/vlogo01.png";
 
 const backgroundImages = [backG1, backG2, backG3]; 
 
@@ -30,14 +30,14 @@ const HomeScreen = () => {
 
   // Responsive size values
   const sizes = {
-    bisuLogo: 50 * scale,
-    creativeLogo: 45 * scale,
-    titleFont: 30 * scale,
-    subtitleFont: 15 * scale,
+    bisuLogo: 80 * scale,
+    creativeLogo: 75 * scale,
+    titleFont: 45 * scale,
+    subtitleFont: 20 * scale,
     descFont: 12 * scale,
-    buttonFont: 20 * scale,
-    buttonHeight: 40 * scale,
-    buttonWidth: isPhone ? "100%" : 135 * scale, 
+    buttonFont: 30 * scale,
+    buttonHeight: 65 * scale,
+    buttonWidth: isPhone ? "100%" : 190 * scale, 
     footerFont: 10 * scale,
   };
 
@@ -96,7 +96,7 @@ const HomeScreen = () => {
 
         {/* Buttons */}
         <View
-          className="w-11/12 max-w-xl flex-row flex-wrap justify-center"
+          className="w-11/12 max-w-xxl flex-row flex-wrap justify-center"
           style={{
             flexDirection: isPhone ? "column" : "row",
             alignItems: "center",
@@ -104,7 +104,7 @@ const HomeScreen = () => {
         >
           <Link href="/ScanScreen" asChild>
             <Pressable
-              className="rounded-xl border-2 border-orange-400 bg-white/20 justify-center items-center shadow-md mb-4"
+              className="rounded-xl border-4 border-orange-400 bg-white/20 justify-center items-center shadow-md mb-4"
               style={{
                 width: sizes.buttonWidth,
                 height: sizes.buttonHeight,
@@ -114,7 +114,7 @@ const HomeScreen = () => {
               <Text
                 className="text-white font-bold tracking-wide"
                 style={{ fontSize: sizes.buttonFont }}
-              >
+              > 
                 VISITOR IN
               </Text>
             </Pressable>
@@ -122,7 +122,7 @@ const HomeScreen = () => {
 
           <Link href="/ScanScreenOut" asChild>
             <Pressable
-              className="rounded-xl border-2 border-orange-400 bg-white/20 justify-center items-center shadow-md"
+              className="rounded-xl border-4 border-orange-400 bg-white/20 justify-center items-center shadow-md"
               style={{
                 width: sizes.buttonWidth,
                 height: sizes.buttonHeight,

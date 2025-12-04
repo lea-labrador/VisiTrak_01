@@ -1,14 +1,5 @@
 // screens/EntryScreen.js
-import {
-  View,
-  Text,
-  ImageBackground,
-  Image,
-  Pressable,
-  SafeAreaView,
-  StatusBar,
-  useWindowDimensions,
-} from "react-native";
+import {View, Text, ImageBackground, Image, Pressable, StatusBar,useWindowDimensions, SafeAreaView,} from "react-native";
 import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import Card from "../components/Card";
@@ -30,14 +21,14 @@ export default function EntryScreen() {
     scanFont: 18 * scale,
     buttonFont: 16 * scale,
     buttonHeight: 48 * scale,
-    buttonWidth: isTablet ? width * 0.4 : isSmallPhone ? width * 0.85 : width * 0.7,
+    buttonWidth: isTablet ? width * 0.6 : isSmallPhone ? width * 0.85 : width * 0.7,
     footerFont: 20 * scale,
     headerPaddingTop: (StatusBar.currentHeight ?? 0) + (isTablet ? 20 : 10),
   };
 
   return (
     <ImageBackground
-      source={require("../assets/images/backG1.png")}
+      source={require("../assets/images/BG009.png")}
       style={{ flex: 1 }}
       resizeMode="cover"
     >

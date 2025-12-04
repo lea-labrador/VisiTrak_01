@@ -1,21 +1,34 @@
 {
   "expo": {
-    "name": "visitrak",
+    "name": "VisiTrak",
     "slug": "visitrak",
     "version": "1.0.0",
     "orientation": "default",
     "scheme": "visitrak",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 3000,
+      "url": "https://u.expo.dev/4b12fd42-5057-4e23-8fe0-79b1ac255848"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lealabrador.visitrak",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/images/logo06.png",
+        "backgroundImage": "./assets/images/logo06.png",
+        "monochromeImage": "./assets/images/logo06.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -24,7 +37,7 @@
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.lea_l.visitrak"
-    }, 
+    },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png",
@@ -42,7 +55,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/logo06.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
@@ -57,8 +70,11 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "4b12fd42-5057-4e23-8fe0-79b1ac255848"
+      }
     },
-    "owner": "lea_l"
+    "owner": "lealabrador"
   }
 }

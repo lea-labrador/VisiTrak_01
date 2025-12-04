@@ -8,7 +8,7 @@ import SuccessCard from "../components/SuccessCard";
 import Footer from "../components/Footer";
 
 export default function CheckInSummary() {
-  const { name, exitKey, checkInTime, office } = useLocalSearchParams();
+  const { name, exitKey, checkInTime, office, address } = useLocalSearchParams();
   const { width, height } = useWindowDimensions();
 
   // Scale factor — dynamically adjusts based on screen size
@@ -25,7 +25,7 @@ export default function CheckInSummary() {
 
   return (
     <LinearGradient
-      colors={["#1A237E", "#3949AB", "#5C6BC0"]}
+      colors={["#381366", "#4A2279", "#573483"]}
       style={{ flex: 1 }}
     >
       <SafeAreaView style={{ flex: 1 }}>
@@ -48,6 +48,7 @@ export default function CheckInSummary() {
           {/* ✅ Success Card */}
           <SuccessCard
             name={name || "Guest Visitor"}
+            address={address || "N/A"}
             exitKey={exitKey || "N/A"}
             checkIn={checkInTime || "N/A"}
             visiting={office || "N/A"}

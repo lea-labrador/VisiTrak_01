@@ -1,5 +1,4 @@
-// screens/EntryScreen.js
-import { View, Text, ImageBackground, Image, Pressable, SafeAreaView, StatusBar } from "react-native";
+import {View, Text, ImageBackground, Image, Pressable, StatusBar, useWindowDimensions,SafeAreaView} from "react-native";
 import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import Card from "../components/Card";
@@ -9,68 +8,116 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 
 export default function EntryScreen() {
-  return ( 
+  const { width, height } = useWindowDimensions();
+
+  // 📱 Responsive scaling tiers
+  const isLarge = width > 800; // tablet or large screen
+  const scale = isLarge ? 1.4 : width > 600 ? 1.2 : 1;
+
+  return (
     <ImageBackground
-      source={require("../assets/images/backG1.png")}
+      source={require("../assets/images/BG009.png")}
       className="flex-1"
       resizeMode="cover"
     >
       {/* Safe area wrapper prevents overlap with system top bar */}
       <SafeAreaView className="flex-1">
         <View className="flex-1">
-          {/* 🔹 Header stays fixed at top */}
+          {/* 🔹 Header */}
           <View
             className="px-6"
-            style={{ paddingTop: StatusBar.currentHeight || 0 }}
+            style={{ paddingTop: (StatusBar.currentHeight || 0) + 10 * scale }}
           >
             <Header title="VisiTrak" />
           </View>
 
-          {/* Main Content */}
-          <View className="flex-1 justify-center px-6">
-            <Card>
+          {/* 🔸 Main Content */}
+          <View
+            className="flex-1 justify-center px-6"
+            style={{
+              paddingHorizontal: 24 * scale,
+              marginTop: 20 * scale,
+              marginBottom: 20 * scale,
+            }}
+          >
+            <Card
+              style={{
+                transform: [{ scale }],
+                maxWidth: Math.min(width * 0.9, 500 * scale),
+                alignSelf: "center",
+              }}
+            >
               {/* Logos inside the card (aligned to right) */}
-              <Logos />
+              <Logos scale={scale} />
 
               {/* Card Body */}
               <View className="items-center mt-4">
-                <Text className="text-white text-lg font-semibold mb-4">
+                <Text
+                  className="text-white font-semibold mb-4"
+                  style={{ fontSize: 18 * scale }}
+                >
                   Scan QR Code
                 </Text>
 
-                {/* QR Placeholder */}
-                <View className="w-40 h-40 bg-white rounded-lg justify-center items-center mb-6">
+                {/* ✅ QR Placeholder */}
+                <View
+                  className="bg-white rounded-lg justify-center items-center mb-6"
+                  style={{
+                    width: 160 * scale,
+                    height: 160 * scale,
+                    borderRadius: 12 * scale,
+                    shadowOpacity: 0.4,
+                    shadowRadius: 6 * scale,
+                  }}
+                >
                   <Image
                     source={require("../assets/images/qr-out.png")}
-                    className="w-36 h-36"
+                    style={{
+                      width: 144 * scale,
+                      height: 144 * scale,
+                    }}
                     resizeMode="contain"
                   />
                 </View>
 
                 {/* Divider */}
-                <Divider text="or" />
+                <Divider text="or" scale={scale} />
 
-                {/* Start Registration Button */}
-                <Link href="/ExitScreen" asChild>
-                  <Pressable className="flex-row items-center bg-white px-10 py-4 rounded-2xl mt-4 shadow-md">
+                {/* ✅ Start Registration Button */}
+                <Link href="/FeedbackForm" asChild>
+                  <Pressable
+                    className="flex-row items-center bg-white rounded-2xl shadow-md"
+                    style={{
+                      paddingVertical: 12 * scale,
+                      paddingHorizontal: 24 * scale,
+                      marginTop: 16 * scale,
+                      minWidth: width * 0.7,       
+                      maxWidth: width * 0.9,       
+                      justifyContent: "center",   
+                    }}
+                  >
                     <MaterialCommunityIcons
                       name="file-document-outline"
-                      size={24}
+                      size={24 * scale}
                       color="black"
                     />
-                    <Text className="text-base font-semibold ml-2 px-3">
-                      Exit without QR
+                    <Text
+                      className="font-semibold ml-2 px-3"
+                      style={{ fontSize: 15 * scale }}
+                    >
+                      Check Out 
                     </Text>
-                    <Feather name="arrow-right" size={20} color="black" />
+                    <Feather name="arrow-right" size={20 * scale} color="black" />
                   </Pressable>
                 </Link>
+
               </View>
             </Card>
           </View>
 
-          {/* Footer - always at bottom */}
-          <View className="pb-4">
-            <Footer />
+          {/* 🔹 Footer */}
+          <View style={{ paddingBottom: 20 * scale }}>
+            <Footer scale={scale} />
           </View>
         </View>
       </SafeAreaView>

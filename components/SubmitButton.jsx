@@ -5,9 +5,9 @@ export default function SubmitButton({ onPress, title = "Submit Registration" })
   return (
     <Pressable
       onPress={onPress}
-      className="h-14 w-11/12 mx-auto mt-6 mb-6 rounded-xl bg-indigo-900 justify-center items-center shadow-lg"
+      className="h-14 w-11/12 mx-auto mt-6 mb-6 rounded-xl bg-purple-700 justify-center items-center shadow-lg"
     >
-      <Text className="text-white text-lg font-bold tracking-wide">{title}</Text>
+      <Text className="text-white text-3xl font-bold tracking-wide">{title}</Text>
     </Pressable>
   );
 }

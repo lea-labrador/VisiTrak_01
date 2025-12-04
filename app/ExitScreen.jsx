@@ -1,6 +1,9 @@
-import { View, SafeAreaView, StatusBar } from "react-native";
+import { View, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
-import { useRouter } from "expo-router"; // for navigation
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+
 import QrScanner from "./QrScanner";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -11,29 +14,35 @@ export default function ExitScreen() {
 
   const handleScanned = (data) => {
     console.log("✅ User exit key:", data);
-    router.push("/FeedbackForm"); // directly navigate after scan
+    router.push("/FeedbackForm");
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-blue-900">
-      <View className="flex-1 px-6">
-        {/* 🔹 Header with safe padding */}
-        <View style={{ paddingTop: StatusBar.currentHeight || 0 }}>
-          <Header title="VisiTrak" />
-        </View>
+    <LinearGradient
+      colors={["#381366", "#4A2279", "#573483"]}
+      className="flex-1"
+    >
+      <SafeAreaView className="flex-1">
+        <View className="flex-1 px-6">
 
-        {/* QR Scanner + Manual Input */}
-        <View className="flex-1 justify-center">
-          <QrScanner
-            onScanned={handleScanned}
-            keyCode={keyCode}
-            setKeyCode={setKeyCode}
-          />
-        </View>
+          {/* Header with StatusBar padding */}
+          <View style={{ paddingTop: StatusBar.currentHeight || 0 }}>
+            <Header title="VisiTrak" />
+          </View>
 
-        {/* Footer always at bottom */}
-        <Footer />
-      </View>
-    </SafeAreaView>
+          {/* QR Scanner Section */}
+          <View className="flex-1 justify-center">
+            <QrScanner
+              onScanned={handleScanned}
+              keyCode={keyCode}
+              setKeyCode={setKeyCode}
+            />
+          </View>
+
+          {/* Bottom footer */}
+          <Footer />
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }

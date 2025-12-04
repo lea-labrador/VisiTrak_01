@@ -12,8 +12,8 @@ const icons = [
 
 // Map number to satisfaction label
 const satisfactionLabels = [
-  "Very Dissatisfied",
-  "Dissatisfied",
+  "Very unsatisfied",
+  "Unsatisfied",
   "Neutral",
   "Satisfied",
   "Very Satisfied",
@@ -88,7 +88,7 @@ export default function EmojiRating({ value, onChange }) {
             {icons.map((icon, index) => {
               const isActive = value === index + 1 && !notApplicable;
               const IconComp = icon.lib;
-              return (
+              return ( 
                 <Pressable
                   key={index}
                   onPress={() => handleEmojiPress(index)}
