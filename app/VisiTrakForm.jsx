@@ -1,9 +1,9 @@
 import React, { useState, useRef } from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, KeyboardAvoidingView, Platform, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 
-import Footer from "../components/Footer"; 
+import Footer from "../components/Footer";
 import BackgroundCarousel from "../components/BackgroundCarousel";
 import PersonalInfoSection from "../components/PersonalInfoSection";
 import VisitInfoSection from "../components/VisitInfoSection";
@@ -17,35 +17,58 @@ import backG03 from "../assets/images/backG010.png";
 
 export default function VisiTrakForm() {
   const router = useRouter();
-
   const scrollRef = useRef(null);
-  const positions = useRef({});
-  const addressParts = useRef({ municipality: "", barangay: "" });
 
-  // Form States
+  /* 🔹 SECTION POSITIONS */
+  const sectionPositions = useRef({});
+
+  /* 🔹 INPUT REFS */
+  const fullNameRef = useRef(null);
+  const homeAddressRef = useRef(null);
+  const customOfficeRef = useRef(null);
+  const customPurposeRef = useRef(null);
+  const contactNumberRef = useRef(null);
+  const emailRef = useRef(null);
+  const agreeTermsRef = useRef(null);
+
+  /* 🔹 FORM STATE */
   const [fullName, setFullName] = useState("");
   const [homeAddress, setHomeAddress] = useState("");
-  const [purpose, setPurpose] = useState("");
   const [office, setOffice] = useState("");
+  const [customOffice, setCustomOffice] = useState("");
+  const [purpose, setPurpose] = useState("");
+  const [customPurpose, setCustomPurpose] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [email, setEmail] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [emojiRating] = useState(0);
+  const [errors, setErrors] = useState({});
 
-  // Error States 🔴
-  const [errors, setErrors] = useState({
-    fullName: false,
-    homeAddress: false,
-    purpose: false,
-    office: false,
-    contactNumber: false,
-    agreeTerms: false,
-  });
+  /* 🔹 OPTIONS */
+  const purposes = [
+    "COR/TOR",
+    "MEDICAL",
+    "PAYMENT",
+    "INQUIRY",
+    "SUBMISSION OF REQUIREMENTS",
+    "VISIT",
+    "SEMINAR / WEBINAR",
+    "Other",
+  ];
 
-  const purposes = ["COR/TOR", "MEDICAL", "PAYMENT", "INQUIRY", "SUBMISSION OF REQUIREMENTS", "VISIT", "SEMINAR / WEBINAR", "Other"];
-  const offices = ["REGISTRAR", "CLINIC", "CASHIER", "CCIS/CTAS OFFICE", "CCIS EXTENSION OFFICE", "CCJ OFFICE", "Other"];
+  const offices = [
+    "REGISTRAR",
+    "CLINIC",
+    "CASHIER",
+    "CCIS/CTAS OFFICE",
+    "CCIS EXTENSION OFFICE",
+    "CCJ OFFICE",
+    "Other",
+  ];
+
   const images = [backG01, backG02, backG03];
 
+  /* 🔹 EXIT KEY */
   const generateExitKey = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     return Array.from({ length: 6 }, () =>
@@ -53,68 +76,67 @@ export default function VisiTrakForm() {
     ).join("");
   };
 
+  /* 🔹 SCROLL TO SECTION */
+  const scrollToSection = (section) => {
+    const y = sectionPositions.current[section];
+    if (y !== undefined) {
+      scrollRef.current?.scrollTo({
+        y: Math.max(0, y - 30),
+        animated: true,
+      });
+    }
+  };
+
+  /* 🔹 SECTION → FIELD MAPPING */
+  const sectionErrorMap = {
+    personal: ["fullName", "homeAddress"],
+    visit: ["office", "customOffice", "purpose", "customPurpose"],
+    contact: ["contactNumber"],
+    terms: ["agreeTerms"],
+  };
+
+  /* 🔹 SUBMIT */
   const onSubmit = () => {
     const digitsOnly = (contactNumber || "").replace(/[^0-9]/g, "");
+
     const newErrors = {
       fullName: fullName.trim() === "",
-      homeAddress: homeAddress.trim() === "", 
-      purpose: purpose.trim() === "",
+      homeAddress: homeAddress.trim() === "",
       office: office.trim() === "",
-      // mark as error unless exactly 11 digits
+      customOffice: office === "Other" && customOffice.trim() === "",
+      purpose: purpose.trim() === "",
+      customPurpose: purpose === "Other" && customPurpose.trim() === "",
       contactNumber: digitsOnly.length !== 11,
       agreeTerms: !agreeTerms,
     };
 
-
     setErrors(newErrors);
 
-    // If any field is still invalid, stop submission
-    if (Object.values(newErrors).includes(true)) {
-      // find first invalid key in priority order and scroll to it
-      const order = [
-        "fullName",
-        "homeAddress",
-        "purpose",
-        "office",
-        "contactNumber",
-        "agreeTerms",
-      ]; 
-      const firstInvalid = order.find((k) => newErrors[k]);
-      if (firstInvalid) {
-        // handle home/address subfields specially
-        if (firstInvalid === "homeAddress") {
-          // if municipality missing
-          if (!addressParts.current.municipality && positions.current.municipality != null) {
-            scrollRef.current?.scrollTo({ y: Math.max(0, positions.current.municipality - 20), animated: true });
-          } else if (addressParts.current.municipality && !addressParts.current.barangay && positions.current.barangay != null) {
-            scrollRef.current?.scrollTo({ y: Math.max(0, positions.current.barangay - 20), animated: true });
-          } else if (positions.current.homeAddress != null) {
-            scrollRef.current?.scrollTo({ y: Math.max(0, positions.current.homeAddress - 20), animated: true });
-          }
-        } else if (firstInvalid === "contactNumber") {
-          if (positions.current.contactNumber != null) {
-            scrollRef.current?.scrollTo({ y: Math.max(0, positions.current.contactNumber - 20), animated: true });
-          } else {
-            // fallback: scroll to end where contact input is likely located
-            scrollRef.current?.scrollToEnd({ animated: true });
-          }
-        } else if (positions.current[firstInvalid] != null) {
-          scrollRef.current?.scrollTo({ y: Math.max(0, positions.current[firstInvalid] - 20), animated: true });
-        }
+    /* 🔹 FIND FIRST SECTION WITH ERROR */
+    for (const section in sectionErrorMap) {
+      const hasError = sectionErrorMap[section].some(
+        (field) => newErrors[field]
+      );
+
+      if (hasError) {
+        scrollToSection(section);
+        return;
       }
-      return;
     }
 
+    /* 🔹 ALL VALID */
     const exitKey = generateExitKey();
     const checkInTime = new Date().toLocaleTimeString();
+    const finalOffice = office === "Other" ? customOffice : office;
+    const finalPurpose = purpose === "Other" ? customPurpose : purpose;
 
     router.push({
       pathname: "/CheckInSummary",
       params: {
         name: fullName,
         address: homeAddress,
-        office,
-        purpose,
+        office: finalOffice,
+        purpose: finalPurpose,
         contactNumber,
         email,
         checkInTime,
@@ -126,60 +148,106 @@ export default function VisiTrakForm() {
 
   return (
     <LinearGradient colors={["#381366", "#4A2279", "#573483"]} className="flex-1">
-      <ScrollView ref={scrollRef} contentContainerStyle={{ paddingBottom: 40 }}>
-        <BackgroundCarousel images={images} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={{ paddingBottom: 40 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <BackgroundCarousel images={images} />
 
-        <View onLayout={(e) => { positions.current.header = e.nativeEvent.layout.y; }} />
+          {/* 🔹 PERSONAL INFO */}
+          <View
+            onLayout={(e) =>
+              (sectionPositions.current.personal =
+                e.nativeEvent.layout.y)
+            }
+          >
+            <PersonalInfoSection
+              fullName={fullName}
+              setFullName={setFullName}
+              fullNameRef={fullNameRef}
+              homeAddress={homeAddress}
+              setHomeAddress={setHomeAddress}
+              homeAddressRef={homeAddressRef}
+              errors={errors}
+              setErrors={setErrors}
+              onFullNameSubmit={() => homeAddressRef.current?.focus()}
+              onHomeAddressSubmit={() => customOfficeRef.current?.focus()}
+            />
+          </View>
 
-        <PersonalInfoSection
-          fullName={fullName}
-          setFullName={setFullName}
-          homeAddress={homeAddress}
-          setHomeAddress={setHomeAddress}
-          errors={errors}
-          setErrors={setErrors}
-          onNameLayout={(e) => { positions.current.fullName = e.nativeEvent.layout.y; }}
-          onAddressLayout={(e) => { positions.current.homeAddress = e.nativeEvent.layout.y; }}
-          onAddressPartsChange={(parts) => { addressParts.current = parts; }}
-        />
+          {/* 🔹 VISIT INFO */}
+          <View
+            onLayout={(e) =>
+              (sectionPositions.current.visit =
+                e.nativeEvent.layout.y)
+            }
+          >
+            <VisitInfoSection
+              office={office}
+              setOffice={setOffice}
+              customOffice={customOffice}
+              setCustomOffice={setCustomOffice}
+              customOfficeRef={customOfficeRef}
+              purpose={purpose}
+              setPurpose={setPurpose}
+              customPurpose={customPurpose}
+              setCustomPurpose={setCustomPurpose}
+              customPurposeRef={customPurposeRef}
+              offices={offices}
+              purposes={purposes}
+              errors={errors}
+              setErrors={setErrors}
+              onCustomOfficeSubmit={() => contactNumberRef.current?.focus()}
+              onCustomPurposeSubmit={() => contactNumberRef.current?.focus()}
+            />
+          </View>
 
+          {/* 🔹 CONTACT INFO */}
+          <View
+            onLayout={(e) =>
+              (sectionPositions.current.contact =
+                e.nativeEvent.layout.y)
+            }
+          >
+            <ContactInfoSection
+              contactNumber={contactNumber}
+              setContactNumber={setContactNumber}
+              contactNumberRef={contactNumberRef}
+              email={email}
+              setEmail={setEmail}
+              emailRef={emailRef}
+              errors={errors}
+              setErrors={setErrors}
+              onContactSubmit={() => emailRef.current?.focus()}
+              onEmailSubmit={onSubmit}
+            />
+          </View>
 
-        <VisitInfoSection
-          purpose={purpose}
-          setPurpose={setPurpose}
-          office={office}
-          setOffice={setOffice}
-          purposes={purposes}
-          offices={offices}
-          errors={errors}
-          setErrors={setErrors}  
-          onPurposeLayout={(e) => { positions.current.purpose = e.nativeEvent.layout.y; }}
-          onOfficeLayout={(e) => { positions.current.office = e.nativeEvent.layout.y; }}
-        />
+          {/* 🔹 TERMS */}
+          <View
+            onLayout={(e) =>
+              (sectionPositions.current.terms =
+                e.nativeEvent.layout.y)
+            }
+          >
+            <TermsAgreement
+              agreeTerms={agreeTerms}
+              setAgreeTerms={setAgreeTerms}
+              ref={agreeTermsRef}
+              errors={errors}
+              setErrors={setErrors}
+            />
+          </View>
 
-
-        <ContactInfoSection
-          contactNumber={contactNumber}
-          setContactNumber={setContactNumber}
-          email={email}
-          setEmail={setEmail}
-          errors={errors}
-          setErrors={setErrors}
-          onContactLayout={(e) => { positions.current.contactNumber = e.nativeEvent.layout.y; }}
-        />
-
-
-        <TermsAgreement
-          agreeTerms={agreeTerms}
-          setAgreeTerms={setAgreeTerms}
-          errors={errors}
-          setErrors={setErrors}
-          onTermsLayout={(e) => { positions.current.agreeTerms = e.nativeEvent.layout.y; }}
-        />
-
-        <SubmitButton onPress={onSubmit} />
-        <Footer />
-      </ScrollView>
+          <SubmitButton onPress={onSubmit} />
+          <Footer />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 }

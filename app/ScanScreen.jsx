@@ -120,7 +120,7 @@ export default function EntryScreen() {
                         marginHorizontal: 8,
                       }}
                     >
-                      Start Registration
+                      Scan or tap to check in
                     </Text>
                     <Feather name="arrow-right" size={18 * scale} color="black" />
                   </Pressable>

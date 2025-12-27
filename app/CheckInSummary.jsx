@@ -8,7 +8,7 @@ import SuccessCard from "../components/SuccessCard";
 import Footer from "../components/Footer";
 
 export default function CheckInSummary() {
-  const { name, exitKey, checkInTime, office, address } = useLocalSearchParams();
+  const { name, exitKey, checkInTime, office, purpose, address, contactNumber, email } = useLocalSearchParams();
   const { width, height } = useWindowDimensions();
 
   // Scale factor — dynamically adjusts based on screen size
@@ -52,6 +52,9 @@ export default function CheckInSummary() {
             exitKey={exitKey || "N/A"}
             checkIn={checkInTime || "N/A"}
             visiting={office || "N/A"}
+            purpose={purpose || "N/A"}
+            contactNumber={contactNumber || "N/A"}
+            email={email || "N/A"}
           />
 
           {/* ✅ Message */}

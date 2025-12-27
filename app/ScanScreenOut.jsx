@@ -84,7 +84,7 @@ export default function EntryScreen() {
                 <Divider text="or" scale={scale} />
 
                 {/* ✅ Start Registration Button */}
-                <Link href="/FeedbackForm" asChild>
+                <Link href="/ExitScreen" asChild>
                   <Pressable
                     className="flex-row items-center bg-white rounded-2xl shadow-md"
                     style={{
@@ -105,7 +105,7 @@ export default function EntryScreen() {
                       className="font-semibold ml-2 px-3"
                       style={{ fontSize: 15 * scale }}
                     >
-                      Check Out 
+                      Scan or tap to check Out 
                     </Text>
                     <Feather name="arrow-right" size={20 * scale} color="black" />
                   </Pressable>
