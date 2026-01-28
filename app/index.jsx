@@ -1,4 +1,11 @@
-import { View, Text, ImageBackground, Pressable, Image, useWindowDimensions } from "react-native";
+import {
+  View,
+  Text,
+  ImageBackground,
+  Pressable,
+  Image,
+  useWindowDimensions,
+} from "react-native";
 import React, { useState, useEffect } from "react";
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -10,17 +17,18 @@ import backG3 from "../assets/images/BG011.png";
 import bisuLogo from "../assets/images/bisu-logo.png";
 import creativeLogo from "../assets/images/vlogo01.png";
 
-const backgroundImages = [backG1, backG2, backG3]; 
+const backgroundImages = [backG1, backG2, backG3];
 
 const HomeScreen = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { width } = useWindowDimensions();
 
-  // Auto-play background images
+  // Auto-play background images ONLY
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % backgroundImages.length);
     }, 4000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -37,7 +45,7 @@ const HomeScreen = () => {
     descFont: 12 * scale,
     buttonFont: 30 * scale,
     buttonHeight: 65 * scale,
-    buttonWidth: isPhone ? "100%" : 190 * scale, 
+    buttonWidth: isPhone ? "100%" : 190 * scale,
     footerFont: 10 * scale,
   };
 
@@ -114,7 +122,7 @@ const HomeScreen = () => {
               <Text
                 className="text-white font-bold tracking-wide"
                 style={{ fontSize: sizes.buttonFont }}
-              > 
+              >
                 VISITOR IN
               </Text>
             </Pressable>

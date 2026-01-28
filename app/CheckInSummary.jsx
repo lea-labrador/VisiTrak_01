@@ -1,3 +1,4 @@
+import React from "react";
 import { View, Text, ScrollView, useWindowDimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,12 +9,21 @@ import SuccessCard from "../components/SuccessCard";
 import Footer from "../components/Footer";
 
 export default function CheckInSummary() {
-  const { name, exitKey, checkInTime, office, purpose, address, contactNumber, email } = useLocalSearchParams();
-  const { width, height } = useWindowDimensions();
+  const {
+    name,
+    exitKey,
+    checkInTime,
+    office,
+    purpose,
+    address,
+    contactNumber,
+    email,
+  } = useLocalSearchParams();
+
+  const { width } = useWindowDimensions();
 
   // Scale factor — dynamically adjusts based on screen size
   const scale = Math.min(Math.max(width / 400, 0.8), 1.6);
-  const isTablet = width >= 768;
 
   // Responsive sizes
   const sizes = {
@@ -22,6 +32,17 @@ export default function CheckInSummary() {
     messageFont: 22 * scale,
     messageSpacing: 28 * scale,
   };
+
+  // ✅ Format check-in time (TIME ONLY)
+  const formattedCheckInTime = checkInTime
+    ? new Date(checkInTime).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 
   return (
     <LinearGradient
@@ -50,7 +71,7 @@ export default function CheckInSummary() {
             name={name || "Guest Visitor"}
             address={address || "N/A"}
             exitKey={exitKey || "N/A"}
-            checkIn={checkInTime || "N/A"}
+            checkIn={formattedCheckInTime}
             visiting={office || "N/A"}
             purpose={purpose || "N/A"}
             contactNumber={contactNumber || "N/A"}

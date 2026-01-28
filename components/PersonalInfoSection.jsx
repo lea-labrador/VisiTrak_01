@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { View, Text, useWindowDimensions } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, Text, useWindowDimensions, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import SectionTitle from "./SectionTitle";
 import InputField from "./InputField";
 import BoholAddressSelector from "./BoholAddressSelector";
+import { checkActiveVisitByNameToday } from "../lib/visits.service";
 
 export default function PersonalInfoSection({
   fullName,
@@ -11,76 +12,107 @@ export default function PersonalInfoSection({
   homeAddress,
   setHomeAddress,
   errors,
-  setErrors, // 🔹 recommended to pass from parent
+  setErrors,
   onNameLayout,
   onAddressLayout,
-  onAddressPartsChange
+  onAddressPartsChange,
 }) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const [nameWarning, setNameWarning] = useState("");
+  const [checkingDuplicate, setCheckingDuplicate] = useState(false);
+  const debounceRef = useRef(null);
 
-  // Responsive scaling
-  const isLarge = width > 800;
-  const isTablet = width > 600 && width <= 800;
-  const scale = isLarge ? 1.4 : isTablet ? 1.2 : 1;
+  // -------------------------
+  // Dynamic Scale Factor
+  // -------------------------
+  const baseWidth = 400; // your design base width
+  const scale = Math.min(Math.max(width / baseWidth, 0.8), 1.8); // clamp to 0.8 - 1.8
+  const isPhone = width < 600;
 
+  // -------------------------
+  // Sizes Object (All Dynamic)
+  // -------------------------
+  const sizes = {
+    marginTop: 36 * scale,
+    paddingHorizontal: 24 * scale,
+    containerPadding: 24 * scale,
+    borderRadius: 16 * scale,
+    sectionTitleIcon: 20 * scale,
+    warningFont: 12 * scale,
+    warningMarginBottom: 8 * scale,
+    activityFont: 12 * scale,
+    activityMarginLeft: 8 * scale,
+    inputIconSize: 20 * scale,
+    inputFontSize: 14 * scale,
+  };
+
+  // -------------------------
+  // Name Change Handler
+  // -------------------------
   const handleNameChange = (text) => {
-    // Allow only letters and spaces
     const filteredText = text.replace(/[^a-zA-Z\s]/g, "");
-
-    // Determine warnings: invalid chars OR spaces-only
     let warning = "";
-    if (text !== filteredText) {
-      warning = "Only letters and spaces are allowed";
-    }
 
-    // If user entered characters but they are all spaces, warn and do not set the name
+    if (text !== filteredText) warning = "Only letters and spaces are allowed";
+
     if (filteredText.length > 0 && filteredText.trim().length === 0) {
       warning = "Name cannot be only spaces";
       setNameWarning(warning);
-
-      // clear stored full name (avoid saving spaces)
       setFullName("");
-
-      // Clear error safely
-      if (errors?.fullName && setErrors) {
-        setErrors((prev) => ({ ...prev, fullName: false }));
-      }
-
       return;
     }
 
     setNameWarning(warning);
     setFullName(filteredText);
 
-    // Clear error safely
     if (errors?.fullName && setErrors) {
       setErrors((prev) => ({ ...prev, fullName: false }));
     }
+
+    // 🔥 Debounced Duplicate Check
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(async () => {
+      if (filteredText.trim().length < 2) return;
+      try {
+        setCheckingDuplicate(true);
+        const exists = await checkActiveVisitByNameToday(filteredText.trim());
+        if (exists) {
+          setNameWarning("⚠️ This visitor is already checked in today");
+          if (setErrors) {
+            setErrors((prev) => ({ ...prev, fullName: true }));
+          }
+        } else {
+          setNameWarning("");
+        }
+      } catch (err) {
+        console.log("Duplicate check error:", err);
+      } finally {
+        setCheckingDuplicate(false);
+      }
+    }, 500);
   };
 
+  // -------------------------
+  // Render
+  // -------------------------
   return (
-    <View
-      style={{
-        marginTop: 36 * scale,
-        paddingHorizontal: 24 * scale,
-      }}
-    >
-      {/* Title */}
+    <View style={{ marginTop: sizes.marginTop, paddingHorizontal: sizes.paddingHorizontal }}>
+      {/* Section Title */}
       <SectionTitle
-        icon={<Ionicons name="person" size={20 * scale} color="#b6b6b6" />}
+        icon={<Ionicons name="person" size={sizes.sectionTitleIcon} color="#b6b6b6" />}
         text="Personal Information"
         scale={scale}
       />
 
-      {/* Main Container */}
+      {/* Container */}
       <View
         style={{
           backgroundColor: "rgba(255,255,255,0.1)",
           borderWidth: 2,
           borderColor: "#6366f1",
-          borderRadius: 16 * scale,
-          padding: 24 * scale,
+          borderRadius: sizes.borderRadius,
+          padding: sizes.containerPadding,
           marginTop: 4 * scale,
         }}
       >
@@ -88,24 +120,43 @@ export default function PersonalInfoSection({
         {nameWarning ? (
           <Text
             style={{
-              color: "orange",
-              marginBottom: 8 * scale,
-              fontSize: 12 * scale,
+              color: nameWarning.includes("already") ? "#ff4d4f" : "orange",
+              marginBottom: sizes.warningMarginBottom,
+              fontSize: sizes.warningFont,
+              fontWeight: "500",
             }}
           >
             {nameWarning}
           </Text>
         ) : null}
 
+        {/* Loading Indicator */}
+        {checkingDuplicate && (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: sizes.warningMarginBottom,
+            }}
+          >
+            <ActivityIndicator size="small" color="#6366f1" />
+            <Text
+              style={{
+                marginLeft: sizes.activityMarginLeft,
+                fontSize: sizes.activityFont,
+                color: "#b6b6b6",
+              }}
+            >
+              Checking visitor...
+            </Text>
+          </View>
+        )}
+
         {/* Full Name */}
         <View onLayout={onNameLayout}>
           <InputField
             icon={
-              <Ionicons
-                name="person-outline"
-                size={20 * scale}
-                color="#0a3aca"
-              />
+              <Ionicons name="person-outline" size={sizes.inputIconSize} color="#0a3aca" />
             }
             placeholder="Full Name"
             value={fullName}

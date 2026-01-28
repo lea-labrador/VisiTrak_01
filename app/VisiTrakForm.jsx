@@ -1,5 +1,11 @@
-import React, { useState, useRef } from "react";
-import { ScrollView, KeyboardAvoidingView, Platform, View } from "react-native";
+import React, { useState, useRef, useEffect } from "react";
+import {
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  View,
+  Alert,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 
@@ -10,11 +16,14 @@ import VisitInfoSection from "../components/VisitInfoSection";
 import ContactInfoSection from "../components/ContactInfoSection";
 import TermsAgreement from "../components/TermsAgreement";
 import SubmitButton from "../components/SubmitButton";
+import DuplicateVisitModal from "../components/DuplicateVisitModal";
 
 import backG01 from "../assets/images/backG009.png";
 import backG02 from "../assets/images/backG004.png";
 import backG03 from "../assets/images/backG010.png";
 
+import { addVisit, checkActiveVisitByNameToday } from "../lib/visits.service";
+9
 export default function VisiTrakForm() {
   const router = useRouter();
   const scrollRef = useRef(null);
@@ -38,43 +47,23 @@ export default function VisiTrakForm() {
   const [customOffice, setCustomOffice] = useState("");
   const [purpose, setPurpose] = useState("");
   const [customPurpose, setCustomPurpose] = useState("");
+  const [staffName, setStaffName] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [email, setEmail] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [emojiRating] = useState(0);
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
-  /* 🔹 OPTIONS */
-  const purposes = [
-    "COR/TOR",
-    "MEDICAL",
-    "PAYMENT",
-    "INQUIRY",
-    "SUBMISSION OF REQUIREMENTS",
-    "VISIT",
-    "SEMINAR / WEBINAR",
-    "Other",
-  ];
+  /* 🔹 DUPLICATE CHECK STATE */
+  const [nameExistsToday, setNameExistsToday] = useState(false);
+  const [checkingName, setCheckingName] = useState(false);
+  const [duplicateVisitInfo, setDuplicateVisitInfo] = useState(null);
 
-  const offices = [
-    "REGISTRAR",
-    "CLINIC",
-    "CASHIER",
-    "CCIS/CTAS OFFICE",
-    "CCIS EXTENSION OFFICE",
-    "CCJ OFFICE",
-    "Other",
-  ];
+  /* 🔹 MODAL STATE */
+  const [duplicateModalVisible, setDuplicateModalVisible] = useState(false);
 
   const images = [backG01, backG02, backG03];
-
-  /* 🔹 EXIT KEY */
-  const generateExitKey = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    return Array.from({ length: 6 }, () =>
-      chars.charAt(Math.floor(Math.random() * chars.length))
-    ).join("");
-  };
 
   /* 🔹 SCROLL TO SECTION */
   const scrollToSection = (section) => {
@@ -95,8 +84,52 @@ export default function VisiTrakForm() {
     terms: ["agreeTerms"],
   };
 
+  /* ======================================================
+     🔍 AUTO DUPLICATE CHECK (RUNS WHILE TYPING FULL NAME)
+  ====================================================== */
+  useEffect(() => {
+    const handler = setTimeout(async () => {
+      const name = fullName.trim();
+      if (name.length < 3) {
+        setNameExistsToday(false);
+        setDuplicateVisitInfo(null);
+        return;
+      }
+
+      setCheckingName(true);
+      try {
+        // 🔹 Fetch previous active visit info
+        const existingVisit = await checkActiveVisitByNameToday(name);
+        if (existingVisit) {
+          setNameExistsToday(true);
+          setDuplicateVisitInfo(existingVisit); // Save previous visit
+          setErrors((prev) => ({ ...prev, fullName: true }));
+          setDuplicateModalVisible(true); // Show modal
+        } else {
+          setNameExistsToday(false);
+          setDuplicateVisitInfo(null);
+        }
+      } catch (error) {
+        console.error("❌ Name duplicate check error:", error);
+      } finally {
+        setCheckingName(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [fullName]);
+
   /* 🔹 SUBMIT */
-  const onSubmit = () => {
+  const onSubmit = async () => {
+    if (submitting) return;
+
+    // 🔴 BLOCK IF DUPLICATE FOUND
+    if (nameExistsToday && duplicateVisitInfo) {
+      setDuplicateModalVisible(true);
+      scrollToSection("personal");
+      return;
+    }
+
     const digitsOnly = (contactNumber || "").replace(/[^0-9]/g, "");
 
     const newErrors = {
@@ -112,38 +145,47 @@ export default function VisiTrakForm() {
 
     setErrors(newErrors);
 
-    /* 🔹 FIND FIRST SECTION WITH ERROR */
+    // 🔹 FIND FIRST SECTION WITH ERROR
     for (const section in sectionErrorMap) {
       const hasError = sectionErrorMap[section].some(
         (field) => newErrors[field]
       );
-
       if (hasError) {
         scrollToSection(section);
         return;
       }
     }
 
-    /* 🔹 ALL VALID */
-    const exitKey = generateExitKey();
-    const checkInTime = new Date().toLocaleTimeString();
+    // 🔹 ALL VALID
     const finalOffice = office === "Other" ? customOffice : office;
     const finalPurpose = purpose === "Other" ? customPurpose : purpose;
 
-    router.push({
-      pathname: "/CheckInSummary",
-      params: {
-        name: fullName,
-        address: homeAddress,
-        office: finalOffice,
-        purpose: finalPurpose,
-        contactNumber,
-        email,
-        checkInTime,
-        exitKey,
-        rating: emojiRating,
-      },
-    });
+    const visitData = {
+      name: fullName,
+      address: homeAddress,
+      office: finalOffice,
+      purpose: finalPurpose,
+      staffName,
+      contactNumber,
+      email,
+      rating: emojiRating,
+      comment: "",
+      checkOutTime: null,
+    };
+
+    setSubmitting(true);
+    try {
+      await addVisit(visitData);
+      router.push({
+        pathname: "/CheckInSummary",
+        params: visitData,
+      });
+    } catch (error) {
+      console.error("Firestore submission error:", error);
+      Alert.alert("Error", "Failed to submit visit. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -162,8 +204,7 @@ export default function VisiTrakForm() {
           {/* 🔹 PERSONAL INFO */}
           <View
             onLayout={(e) =>
-              (sectionPositions.current.personal =
-                e.nativeEvent.layout.y)
+              (sectionPositions.current.personal = e.nativeEvent.layout.y)
             }
           >
             <PersonalInfoSection
@@ -175,6 +216,8 @@ export default function VisiTrakForm() {
               homeAddressRef={homeAddressRef}
               errors={errors}
               setErrors={setErrors}
+              nameExistsToday={nameExistsToday}
+              checkingName={checkingName}
               onFullNameSubmit={() => homeAddressRef.current?.focus()}
               onHomeAddressSubmit={() => customOfficeRef.current?.focus()}
             />
@@ -183,25 +226,24 @@ export default function VisiTrakForm() {
           {/* 🔹 VISIT INFO */}
           <View
             onLayout={(e) =>
-              (sectionPositions.current.visit =
-                e.nativeEvent.layout.y)
+              (sectionPositions.current.visit = e.nativeEvent.layout.y)
             }
           >
             <VisitInfoSection
+              purpose={purpose}
+              setPurpose={setPurpose}
               office={office}
               setOffice={setOffice}
               customOffice={customOffice}
               setCustomOffice={setCustomOffice}
-              customOfficeRef={customOfficeRef}
-              purpose={purpose}
-              setPurpose={setPurpose}
               customPurpose={customPurpose}
               setCustomPurpose={setCustomPurpose}
-              customPurposeRef={customPurposeRef}
-              offices={offices}
-              purposes={purposes}
+              staffName={staffName}
+              setStaffName={setStaffName}
               errors={errors}
               setErrors={setErrors}
+              customOfficeRef={customOfficeRef}
+              customPurposeRef={customPurposeRef}
               onCustomOfficeSubmit={() => contactNumberRef.current?.focus()}
               onCustomPurposeSubmit={() => contactNumberRef.current?.focus()}
             />
@@ -210,8 +252,7 @@ export default function VisiTrakForm() {
           {/* 🔹 CONTACT INFO */}
           <View
             onLayout={(e) =>
-              (sectionPositions.current.contact =
-                e.nativeEvent.layout.y)
+              (sectionPositions.current.contact = e.nativeEvent.layout.y)
             }
           >
             <ContactInfoSection
@@ -231,8 +272,7 @@ export default function VisiTrakForm() {
           {/* 🔹 TERMS */}
           <View
             onLayout={(e) =>
-              (sectionPositions.current.terms =
-                e.nativeEvent.layout.y)
+              (sectionPositions.current.terms = e.nativeEvent.layout.y)
             }
           >
             <TermsAgreement
@@ -244,9 +284,20 @@ export default function VisiTrakForm() {
             />
           </View>
 
-          <SubmitButton onPress={onSubmit} />
+          <SubmitButton onPress={onSubmit} disabled={submitting} />
           <Footer />
         </ScrollView>
+
+        {/* 🔹 DUPLICATE MODAL WITH VISITOR DETAILS */}
+        <DuplicateVisitModal
+          visible={duplicateModalVisible}
+          onClose={() => setDuplicateModalVisible(false)}
+          onProceed={() => {
+            setDuplicateModalVisible(false);
+            router.push("/ScanScreenOut"); // Navigate to check-out page
+          }}
+          visitorData={duplicateVisitInfo} // Pass visitor info
+        />
       </KeyboardAvoidingView>
     </LinearGradient>
   );

@@ -11,19 +11,37 @@ export default function ContactInfoSection({
   setEmail,
   errors,
   onContactLayout,
-  contactNumberRef,       // ref for contact number
-  onContactSubmit,        // Enter handler to move to next
-  emailRef,               // ref for email input
-  onEmailSubmit           // Enter handler (usually submit form)
+  contactNumberRef,
+  onContactSubmit,
+  emailRef,
+  onEmailSubmit
 }) {
   const { width } = useWindowDimensions();
   const [contactWarning, setContactWarning] = useState("");
   const [emailWarning, setEmailWarning] = useState("");
 
-  const isLarge = width > 800;
-  const isTablet = width > 600 && width <= 800;
-  const scale = isLarge ? 1.4 : isTablet ? 1.2 : 1;
+  // -----------------------
+  // Responsive / Elderly-friendly scaling
+  // -----------------------
+  const scale = Math.min(Math.max(width / 400, 0.8), 1.8);
+  const isPhone = width < 600;
 
+  const sizes = {
+    marginTop: 36 * scale,
+    paddingHorizontal: 24 * scale,
+    containerPadding: 24 * scale,
+    borderRadius: 18 * scale,
+    sectionIconSize: 22 * scale,
+    inputIconSize: 20 * scale,
+    inputFontSize: 20 * scale,
+    warningFontSize: 12 * scale,
+    warningMargin: 8 * scale,
+    fieldSpacing: 18 * scale
+  };
+
+  // -----------------------
+  // Handlers
+  // -----------------------
   const handleContactChange = (text) => {
     const hasNonDigit = /[^0-9]/.test(text);
     let filteredText = text.replace(/[^0-9]/g, "");
@@ -35,8 +53,7 @@ export default function ContactInfoSection({
     }
 
     if (!filteredText.startsWith("09")) {
-      if (filteredText.startsWith("0")) filteredText = "09" + filteredText.substring(1);
-      else filteredText = "09" + filteredText;
+      filteredText = filteredText.startsWith("0") ? "09" + filteredText.substring(1) : "09" + filteredText;
     }
 
     if (filteredText.length > 11) filteredText = filteredText.slice(0, 11);
@@ -68,20 +85,37 @@ export default function ContactInfoSection({
   };
 
   return (
-    <View style={{ marginTop: 32 * scale, paddingHorizontal: 24 * scale }}>
+    <View style={{ marginTop: sizes.marginTop, paddingHorizontal: sizes.paddingHorizontal }}>
       <SectionTitle
-        icon={<MaterialIcons name="contact-phone" size={18 * scale} color="#fff" />}
+        icon={<MaterialIcons name="contact-phone" size={sizes.sectionIconSize} color="#fff" />}
         text="Contact Information"
         scale={scale}
       />
 
-      <View style={{ backgroundColor: "rgba(255,255,255,0.1)", borderWidth: 2, borderColor: "#6366f1", borderRadius: 16 * scale, padding: 24 * scale, marginTop: 4 * scale }}>
-        
-        {contactWarning ? <Text style={{ color: "orange", marginBottom: 8 * scale, fontSize: 12 * scale }}>{contactWarning}</Text> : null}
+      <View style={{
+        backgroundColor: "rgba(255,255,255,0.1)",
+        borderWidth: 2,
+        borderColor: "#6366f1",
+        borderRadius: sizes.borderRadius,
+        padding: sizes.containerPadding,
+        marginTop: 4 * scale
+      }}>
+        {/* Contact Warning */}
+        {contactWarning ? (
+          <Text style={{
+            color: "orange",
+            marginBottom: sizes.warningMargin,
+            fontSize: sizes.warningFontSize,
+            fontWeight: "500"
+          }}>
+            {contactWarning}
+          </Text>
+        ) : null}
 
-        <View onLayout={onContactLayout}>
+        {/* Contact Number */}
+        <View onLayout={onContactLayout} style={{ marginBottom: sizes.fieldSpacing }}>
           <InputField
-            icon={<Entypo name="phone" size={16 * scale} color="#0a3aca" />}
+            icon={<Entypo name="phone" size={sizes.inputIconSize} color="#0a3aca" />}
             placeholder="Contact Number"
             value={contactNumber || "09"}
             onChangeText={handleContactChange}
@@ -89,24 +123,35 @@ export default function ContactInfoSection({
             uppercase
             scale={scale}
             hasError={errors?.contactNumber}
-            ref={contactNumberRef}        // attach ref
-            onSubmitEditing={onContactSubmit} // move to next field
+            ref={contactNumberRef}
+            onSubmitEditing={onContactSubmit}
             returnKeyType="next"
           />
         </View>
 
-        {emailWarning ? <Text style={{ color: "orange", marginTop: 16 * scale, marginBottom: 8 * scale, fontSize: 12 * scale }}>{emailWarning}</Text> : null}
+        {/* Email Warning */}
+        {emailWarning ? (
+          <Text style={{
+            color: "orange",
+            marginBottom: sizes.warningMargin,
+            fontSize: sizes.warningFontSize,
+            fontWeight: "500"
+          }}>
+            {emailWarning}
+          </Text>
+        ) : null}
 
+        {/* Email */}
         <InputField
-          icon={<Entypo name="email" size={16 * scale} color="#0a3aca" />}
+          icon={<Entypo name="email" size={sizes.inputIconSize} color="#0a3aca" />}
           placeholder="Email (optional)"
           value={email}
           onChangeText={handleEmailChange}
           keyboardType="email-address"
           scale={scale}
           hasError={!!emailWarning}
-          ref={emailRef}               // attach ref
-          onSubmitEditing={onEmailSubmit} // usually submit form
+          ref={emailRef}
+          onSubmitEditing={onEmailSubmit}
           returnKeyType="done"
         />
       </View>

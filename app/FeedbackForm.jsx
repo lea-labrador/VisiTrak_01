@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,15 +9,18 @@ import {
   useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import Header from "../components/Satisfaction_header";
 import Question from "../components/Question";
 import EmojiRating from "../components/EmojiRating";
+
+import { addFeedback } from "../lib/feedbacks.service";
 
 const questions = [
   "Responsiveness (Pag abi-abi).",
@@ -31,9 +34,20 @@ const questions = [
 ];
 
 export default function FeedbackForm() {
+  const params = useLocalSearchParams();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const scrollRef = useRef(null);
+
+  // Debug: Log received params
+  useEffect(() => {
+    console.log("🎯 FeedbackForm mounted with params:", params);
+    console.log("  - visitId:", params.visitId);
+    console.log("  - visitorName:", params.visitorName);
+  }, [params]);
+
+  const visitId = params.visitId;
+  const visitorName = params.visitorName;
 
   const scale = Math.min(Math.max(width / 400, 0.85), 1.6);
 
@@ -54,19 +68,36 @@ export default function FeedbackForm() {
   const [suggestion, setSuggestion] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [highlightQuestion, setHighlightQuestion] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Store refs to each question container
   const questionRefs = useRef({});
 
   const handleAnswer = (number, value) => {
+    console.log(`📝 Answer updated - Question ${number}: ${value}`);
     setAnswers((prev) => ({ ...prev, [number]: value }));
   };
 
-  const handleSubmit = () => {
-    const firstUnansweredIndex = questions.findIndex((_, i) => !answers[i + 1]);
+  const handleSubmit = async () => {
+    console.log("🚀 Submit button pressed");
+    console.log("Current answers:", answers);
+    console.log("Current suggestion:", suggestion);
 
+    if (submitting) {
+      console.log("⏳ Already submitting, ignoring...");
+      return;
+    }
+    
+    setSubmitting(true);
+
+    // Check unanswered questions (allow 0 as valid)
+    const firstUnansweredIndex = questions.findIndex(
+      (_, i) => answers[i + 1] === undefined
+    );
+    
     if (firstUnansweredIndex !== -1) {
       const questionNumber = firstUnansweredIndex + 1;
+      console.log(`⚠️ Question ${questionNumber} is unanswered`);
+      
       const questionRef = questionRefs.current[questionNumber];
 
       if (questionRef) {
@@ -75,28 +106,92 @@ export default function FeedbackForm() {
           (x, y) => {
             scrollRef.current?.scrollTo({ y: y - 20, animated: true });
           },
-          (error) => {
-            console.log("measureLayout error:", error);
-          }
+          (error) => console.log("measureLayout error:", error)
         );
       }
 
       setHighlightQuestion(questionNumber);
       setShowModal(true);
+      setSubmitting(false);
       return;
     }
 
-    // All questions answered
-    const formData = { answers, suggestion };
-    console.log("Feedback submitted:", formData);
-    router.push("/ThankYouScreen");
+    console.log("✅ All questions answered");
+
+    if (!visitId || !visitorName) {
+      console.error("❌ Missing visitId or visitorName!");
+      Alert.alert("Error", "Missing visit information. Please try again.");
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      // Sanitize answers - ensure all values are numbers
+      const sanitizedAnswers = {};
+      Object.keys(answers).forEach((key) => {
+        sanitizedAnswers[key.toString()] = Number(answers[key]);
+      });
+
+      console.log("📦 Prepared feedback object:");
+      const feedbackObject = {
+        visitId,
+        name: visitorName,
+        answers: sanitizedAnswers,
+        suggestion: suggestion.trim(),
+      };
+      console.log(JSON.stringify(feedbackObject, null, 2));
+
+      console.log("⏳ Calling addFeedback...");
+      const result = await addFeedback(feedbackObject);
+
+      router.replace({
+        pathname: "/ThankYouScreen",
+        params: {
+          visitorName,
+        },
+      });
+    } catch (error) {
+      console.error("❌ Error in handleSubmit:", error);
+      console.error("Error stack:", error.stack);
+      
+      Alert.alert(
+        "Error",
+        `Failed to submit feedback: ${error.message}\n\nPlease check the console for details.`
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  // Early validation if visit info is missing
+  if (!visitId || !visitorName) {
+    console.warn("⚠️ Missing visit information on mount");
+    return (
+      <View className="flex-1 justify-center items-center bg-purple-800 px-5">
+        <Feather name="alert-circle" size={60} color="#fff" />
+        <Text className="text-white text-center text-xl font-bold mt-4">
+          Missing Visit Information
+        </Text>
+        <Text className="text-white/80 text-center mt-2">
+          visitId: {visitId || "missing"}
+        </Text>
+        <Text className="text-white/80 text-center">
+          visitorName: {visitorName || "missing"}
+        </Text>
+        <Pressable
+          onPress={() => router.replace("/")}
+          className="bg-white mt-6 px-8 py-3 rounded-full"
+        >
+          <Text className="text-purple-800 font-bold">Go Back</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <LinearGradient colors={["#381366", "#4A2279", "#573483"]} className="flex-1">
       <SafeAreaView className="flex-1">
         <Header title="VisiTrak" />
-
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
@@ -112,17 +207,29 @@ export default function FeedbackForm() {
                 borderRadius: sizes.borderRadius,
                 padding: sizes.padding,
                 marginHorizontal: sizes.padding / 2,
+                marginTop: sizes.padding,
               }}
             >
               <Text
                 style={{
                   fontSize: sizes.fontTitle,
                   fontWeight: "bold",
-                  marginBottom: sizes.marginVertical,
+                  marginBottom: sizes.marginVertical / 2,
                   textAlign: "center",
                 }}
               >
                 Give Feedback
+              </Text>
+              
+              <Text
+                style={{
+                  fontSize: sizes.statusText,
+                  color: "#666",
+                  marginBottom: sizes.marginVertical,
+                  textAlign: "center",
+                }}
+              >
+                Visitor: {visitorName}
               </Text>
 
               {questions.map((text, index) => (
@@ -145,7 +252,6 @@ export default function FeedbackForm() {
                 </View>
               ))}
 
-              {/* Suggestion Box */}
               <View style={{ marginTop: sizes.marginVertical }}>
                 <Text
                   style={{
@@ -155,7 +261,7 @@ export default function FeedbackForm() {
                     fontSize: sizes.statusText,
                   }}
                 >
-                  Suggestions or comments to help us improve?
+                  Suggestions or comments
                 </Text>
                 <View
                   style={{
@@ -200,7 +306,9 @@ export default function FeedbackForm() {
                   paddingVertical: 14 * scale,
                   borderRadius: sizes.borderRadius,
                   marginTop: sizes.marginVertical,
+                  opacity: submitting ? 0.6 : 1,
                 }}
+                disabled={submitting}
               >
                 <Text
                   style={{
@@ -210,13 +318,13 @@ export default function FeedbackForm() {
                     fontWeight: "600",
                   }}
                 >
-                  SUBMIT FEEDBACK
+                  {submitting ? "Submitting..." : "SUBMIT FEEDBACK"}
                 </Text>
               </Pressable>
             </View>
           </ScrollView>
 
-          {/* Modal */}
+          {/* Incomplete Submission Modal */}
           <Modal
             transparent
             animationType="fade"
@@ -242,11 +350,7 @@ export default function FeedbackForm() {
                   alignItems: "center",
                 }}
               >
-                <Feather
-                  name="alert-circle"
-                  size={sizes.icon}
-                  color="#6c47ff"
-                />
+                <Feather name="alert-circle" size={sizes.icon} color="#6c47ff" />
                 <Text
                   style={{
                     fontSize: sizes.fontTitle / 1.5,

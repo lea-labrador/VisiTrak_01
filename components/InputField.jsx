@@ -8,8 +8,9 @@ const InputField = forwardRef(({
   onChangeText,
   uppercase = false,
   hasError = false,
-  onSubmitEditing,   // new: called when Enter/Next is pressed
-  returnKeyType = "next", // new: set keyboard return key type
+  onSubmitEditing,
+  returnKeyType = "next",
+  scale = 1,           // 🔹 scale factor for input font
 }, ref) => {
 
   const handleChangeText = (text) => {
@@ -22,22 +23,27 @@ const InputField = forwardRef(({
 
   return (
     <View
-      className="flex-row items-center bg-indigo-200/70 rounded-lg px-4 py-3 mb-3"
+      className="flex-row items-center bg-indigo-200/70 rounded-lg px-8 py-3 mb-3"
       style={{
         borderWidth: 2,
         borderColor: hasError ? "red" : "rgba(107,114,128,0.7)",
       }}
     >
-      {icon}
-      <TextInput
-        ref={ref}                     // attach ref
+      {icon && <View style={{ marginRight: 20 }}>{icon}</View>}
+
+      <TextInput  
+        ref={ref}
         placeholder={placeholder}
         placeholderTextColor={hasError ? "red" : "#000"}
         value={value}
         onChangeText={handleChangeText}
-        onSubmitEditing={onSubmitEditing} // handle Enter/Next
-        returnKeyType={returnKeyType}     // keyboard button
-        className="flex-1 text-gray-700 font-medium ml-3"
+        onSubmitEditing={onSubmitEditing}
+        returnKeyType={returnKeyType}
+        style={{
+          flex: 1,
+          fontSize: 16 * scale,    // 🔹 scaled font size
+          color: "#000",
+        }}
         autoCapitalize={uppercase ? "characters" : "none"}
       />
     </View>

@@ -32,7 +32,7 @@ const sizes = {
   secondaryBorder: 3 * scale,
 };
 
-export default function SuccessModal({ visible, onClose }) {
+export default function SuccessModal({ visible, onClose, visitId, visitorName }) {
   const router = useRouter();
 
   return (
@@ -46,7 +46,6 @@ export default function SuccessModal({ visible, onClose }) {
             borderRadius: sizes.modalRadius,
           }}
         >
-          
           <Image
             source={require("../assets/images/modalIcon.png")}
             resizeMode="contain"
@@ -57,7 +56,6 @@ export default function SuccessModal({ visible, onClose }) {
             }}
           />
 
-          {/* Title */}
           <Text
             className="text-indigo-500 font-extrabold mb-10 text-center"
             style={{ fontSize: sizes.titleFont }}
@@ -69,7 +67,11 @@ export default function SuccessModal({ visible, onClose }) {
           <Pressable
             onPress={() => {
               onClose();
-              router.push("/FeedbackForm");
+              // Pass visitId and visitorName as query params
+              router.push({
+                pathname: "/FeedbackForm",
+                params: { visitId, visitorName },
+              });
             }}
             className="bg-purple-600 w-full items-center justify-center mb-6 active:opacity-90"
             style={{
