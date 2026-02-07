@@ -53,9 +53,9 @@ export default function TermsAgreement({
           style={{
             marginLeft: 30 * scale,
             marginRight: 8 * scale,
-            borderWidth: 2,
+            borderWidth: 0.5,
             borderColor: hasError && !agreeTerms ? "red" : "white",
-            borderRadius: 6 * scale,
+            borderRadius: 1 * scale,
           }}
         >
           <Checkbox
@@ -181,14 +181,14 @@ export default function TermsAgreement({
 
             <Pressable
               onPress={() => setShowTerms(false)}
-              className="bg-blue-600 rounded-xl mt-4"
+              className="bg-indigo-600 rounded-xl mt-4"
               style={{ paddingVertical: sizes.buttonPaddingVertical }}
             >
               <Text
                 className="text-center text-white font-medium"
                 style={{ fontSize: sizes.contentTextSize }}
               >
-                Close
+                I Understand - Close Terms
               </Text>
             </Pressable>
           </View>
@@ -278,14 +278,14 @@ export default function TermsAgreement({
 
             <Pressable
               onPress={() => setShowPrivacy(false)}
-              className="bg-blue-600 rounded-xl mt-4"
+              className="bg-emerald-600 rounded-xl mt-4"
               style={{ paddingVertical: sizes.buttonPaddingVertical }}
             >
               <Text
                 className="text-center text-white font-medium"
                 style={{ fontSize: sizes.contentTextSize }}
               >
-                Close
+                I Understand - Close Privacy Policy
               </Text>
             </Pressable>
           </View>
@@ -294,3 +294,4 @@ export default function TermsAgreement({
     </View>
   );
 }
+ 

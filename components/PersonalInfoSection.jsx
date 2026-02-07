@@ -16,6 +16,10 @@ export default function PersonalInfoSection({
   onNameLayout,
   onAddressLayout,
   onAddressPartsChange,
+  fullNameRef,
+  homeAddressRef,
+  onFullNameSubmit,
+  onHomeAddressSubmit,
 }) {
   const { width, height } = useWindowDimensions();
   const [nameWarning, setNameWarning] = useState("");
@@ -150,11 +154,12 @@ export default function PersonalInfoSection({
               Checking visitor...
             </Text>
           </View>
-        )}
+        )} 
 
         {/* Full Name */}
         <View onLayout={onNameLayout}>
           <InputField
+            ref={fullNameRef}
             icon={
               <Ionicons name="person-outline" size={sizes.inputIconSize} color="#0a3aca" />
             }
@@ -162,6 +167,8 @@ export default function PersonalInfoSection({
             value={fullName}
             onChangeText={handleNameChange}
             uppercase
+            onSubmitEditing={onFullNameSubmit}
+            returnKeyType="next"
             scale={scale}
             hasError={errors?.fullName || !!nameWarning}
           />
@@ -170,11 +177,13 @@ export default function PersonalInfoSection({
         {/* Bohol Address Selector */}
         <View onLayout={onAddressLayout}>
           <BoholAddressSelector
+            ref={homeAddressRef}
             homeAddress={homeAddress}
             setHomeAddress={setHomeAddress}
             errors={errors}
             setErrors={setErrors}
             onAddressPartsChange={onAddressPartsChange}
+            onSubmitEditing={onHomeAddressSubmit}
           />
         </View>
       </View>

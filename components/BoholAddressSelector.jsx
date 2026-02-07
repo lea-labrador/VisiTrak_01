@@ -1,6 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
-import { View, Text, useWindowDimensions } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { View, Text, useWindowDimensions, TextInput, Pressable, ScrollView } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { 
   getMunicipalities,
@@ -12,6 +11,7 @@ const BoholAddressSelector = forwardRef(({
   homeAddress, 
   setHomeAddress, 
   errors,
+  setErrors,
   onAddressChange,
   onAddressPartsChange,
   onSubmitEditing
@@ -39,28 +39,51 @@ const BoholAddressSelector = forwardRef(({
 
   const [municipality, setMunicipality] = useState("");
   const [barangay, setBarangay] = useState("");
-  const municipalityPickerRef = useRef(null);
-  const barangayPickerRef = useRef(null);
+  const [showMunicipalityList, setShowMunicipalityList] = useState(false);
+  const [showBarangayList, setShowBarangayList] = useState(false);
+  const municipalityInputRef = useRef(null);
+  const barangayInputRef = useRef(null);
 
   const municipalities = getMunicipalities();
-  const barangayList = municipality ? getBarangays(municipality) : [];
+  const normalizedMunicipality = municipality.trim().toLowerCase();
+  const matchedMunicipality =
+    municipalities.find((mun) => mun.toLowerCase() === normalizedMunicipality) || "";
+  const barangayList = matchedMunicipality ? getBarangays(matchedMunicipality) : [];
+  const normalizedBarangay = barangay.trim().toLowerCase();
+  const matchedBarangay =
+    barangayList.find((brgy) => brgy.toLowerCase() === normalizedBarangay) || "";
+  const filteredMunicipalities = normalizedMunicipality
+    ? municipalities.filter((mun) =>
+        mun.toLowerCase().includes(normalizedMunicipality)
+      )
+    : municipalities;
+  const filteredBarangays = normalizedBarangay
+    ? barangayList.filter((brgy) =>
+        brgy.toLowerCase().includes(normalizedBarangay)
+      )
+    : barangayList;
+  const isSingleMunicipality = filteredMunicipalities.length === 1;
+  const isSingleBarangay = filteredBarangays.length === 1;
 
   // Expose focus method to parent
   useImperativeHandle(ref, () => ({
     focus: () => {
-      municipalityPickerRef.current?.focus?.();
+      setShowMunicipalityList(true);
+      municipalityInputRef.current?.focus?.();
     }
   }));
 
   useEffect(() => {
-    if (onAddressPartsChange) onAddressPartsChange({ municipality, barangay });
+    if (onAddressPartsChange) {
+      onAddressPartsChange({ municipality: matchedMunicipality, barangay: matchedBarangay });
+    }
 
-    if (municipality && barangay) {
-      const fullAddress = `${barangay}, ${municipality}, Bohol`;
+    if (matchedMunicipality && matchedBarangay) {
+      const fullAddress = `${matchedBarangay}, ${matchedMunicipality}, Bohol`;
       setHomeAddress(fullAddress);
 
       if (onAddressChange) {
-        const dbFormat = formatAddressForDB(municipality, barangay);
+        const dbFormat = formatAddressForDB(matchedMunicipality, matchedBarangay);
         onAddressChange(dbFormat);
       }
 
@@ -69,7 +92,7 @@ const BoholAddressSelector = forwardRef(({
       setHomeAddress("");
       if (onAddressChange) onAddressChange(null);
     }
-  }, [municipality, barangay]);
+  }, [matchedMunicipality, matchedBarangay]);
 
   useEffect(() => {
     if (homeAddress && !municipality && !barangay) {
@@ -82,19 +105,63 @@ const BoholAddressSelector = forwardRef(({
     }
   }, []);
 
-  const handleMunicipalityChange = (value) => {
-    setMunicipality(value);
-    setBarangay("");
-
-    if (value) {
-      setTimeout(() => {
-        barangayPickerRef.current?.focus?.();
-      }, 300);
+  const clearHomeAddressError = () => {
+    if (setErrors && errors?.homeAddress) {
+      setErrors((prev) => ({ ...prev, homeAddress: false }));
     }
   };
 
-  const handleBarangayChange = (value) => {
+  const selectMunicipality = (value) => {
+    setMunicipality(value);
+    setBarangay("");
+    setShowMunicipalityList(false);
+    setShowBarangayList(false);
+    clearHomeAddressError();
+
+    if (value) {
+      setTimeout(() => {
+        barangayInputRef.current?.focus?.();
+        setShowBarangayList(true);
+      }, 150);
+    }
+  };
+
+  const selectBarangay = (value) => {
     setBarangay(value);
+    setShowBarangayList(false);
+    clearHomeAddressError();
+  };
+
+  const handleMunicipalitySubmit = () => {
+    const match = municipalities.find(
+      (mun) => mun.toLowerCase() === municipality.trim().toLowerCase()
+    );
+    if (match) {
+      selectMunicipality(match);
+    } else if (filteredMunicipalities.length > 0) {
+      selectMunicipality(filteredMunicipalities[0]);
+    } else {
+      setShowMunicipalityList(true);
+    }
+  };
+
+  const handleBarangaySubmit = () => {
+    if (!matchedMunicipality) {
+      setShowMunicipalityList(true);
+      municipalityInputRef.current?.focus?.();
+      return;
+    }
+
+    const match = barangayList.find(
+      (brgy) => brgy.toLowerCase() === barangay.trim().toLowerCase()
+    );
+    if (match) {
+      selectBarangay(match);
+    } else if (filteredBarangays.length > 0) {
+      selectBarangay(filteredBarangays[0]);
+    } else {
+      setShowBarangayList(true);
+    }
   };
 
   return (
@@ -104,89 +171,150 @@ const BoholAddressSelector = forwardRef(({
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: 'rgba(169, 172, 218, 0.87)',
-          borderRadius: sizes.pickerBorderRadius,
-          paddingHorizontal: sizes.pickerPaddingHorizontal,
-          paddingVertical: sizes.pickerPaddingVertical,
+          backgroundColor: 'rgba(199,210,254,0.7)',
+          borderRadius: 14 * scale,
+          paddingHorizontal: 14 * scale,
+          paddingVertical: 8 * scale,
           marginBottom: sizes.pickerMarginBottom,
           borderWidth: 2,
-          borderColor: errors?.homeAddress ? 'red' : '#8d8d8dff'
+          borderColor: errors?.homeAddress ? '#ef4444' : '#6d4bd9'
         }}
       >
-        <Ionicons name="map-outline" size={sizes.iconSize} color="#0a3aca" style={{ marginRight: sizes.pickerPaddingHorizontal / 1.5 }} />
-        <Picker
-          ref={municipalityPickerRef}
-          selectedValue={municipality}
-          onValueChange={handleMunicipalityChange}
-          dropdownIconColor="#0463fcff"
-          style={{ color: '#111827', flex: 1, fontSize: sizes.fontLarge }} // selected value scales
-        >
-          {/* Scale the first placeholder item */}
-          <Picker.Item
-            label="Select Municipality"
-            value=""
-            color="#555"
-            style={{ fontSize: sizes.fontLarge }} // works on iOS
-          />
-          {municipalities.map((mun) => (
-            <Picker.Item
-              key={mun}
-              label={mun}
-              value={mun}
-              color="#111827"
-              style={{ fontSize: sizes.fontLarge }} // iOS only
-            />
-          ))}
-        </Picker>
+        <Ionicons name="map-outline" size={sizes.iconSize} color="#0a3aca" style={{ marginRight: 10 * scale }} />
+        <TextInput
+          ref={municipalityInputRef}
+          placeholder="Select Municipality"
+          placeholderTextColor="#555"
+          value={municipality}
+          onChangeText={(text) => {
+            setMunicipality(text);
+            if (barangay) setBarangay("");
+            setShowMunicipalityList(true);
+          }}
+          onFocus={() => setShowMunicipalityList(true)}
+          onBlur={() => setTimeout(() => setShowMunicipalityList(false), 120)}
+          onSubmitEditing={handleMunicipalitySubmit}
+          returnKeyType="next"
+          style={{ color: '#1f2937', flex: 1, fontSize: sizes.fontLarge, paddingVertical: 4 * scale, paddingRight: 6 * scale }}
+        />
+        <Ionicons name="chevron-down" size={sizes.iconSize} color="#5b21b6" />
 
       </View>
 
+      {showMunicipalityList && filteredMunicipalities.length > 0 && (
+        <View
+          style={{
+            backgroundColor: 'rgba(199,210,254,0.7)',
+            borderWidth: 1,
+            borderColor: '#6d4bd9',
+            borderRadius: (isSingleMunicipality ? 14 : 12) * scale,
+            marginTop: 4 * scale,
+            marginBottom: sizes.pickerMarginBottom,
+            maxHeight: isSingleMunicipality ? 80 * scale : 200 * scale,
+            overflow: 'hidden',
+            paddingVertical: isSingleMunicipality ? 6 * scale : 0,
+          }}
+        >
+          <ScrollView nestedScrollEnabled>
+            {filteredMunicipalities.map((mun, idx) => (
+              <Pressable
+                key={mun}
+                onPress={() => selectMunicipality(mun)}
+                style={({ pressed }) => ({
+                  paddingVertical: (isSingleMunicipality ? 12 : 10) * scale,
+                  paddingHorizontal: (isSingleMunicipality ? 18 : 16) * scale,
+                  backgroundColor: pressed ? 'rgba(199,210,254,0.9)' : 'transparent',
+                  borderTopWidth: idx === 0 ? 0 : 1,
+                  borderTopColor: '#e2d7fb',
+                  borderRadius: isSingleMunicipality ? 10 * scale : 0,
+                  marginHorizontal: isSingleMunicipality ? 8 * scale : 0,
+                })}
+              >
+                <Text style={{ color: '#2e1065', fontSize: sizes.fontLarge, paddingLeft: 8 * scale }}>
+                  {mun}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       {/* Barangay Section */}
-      {municipality && (
+      {matchedMunicipality && (
         <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-            backgroundColor: 'rgba(169, 172, 218, 0.87)',
-            borderRadius: sizes.pickerBorderRadius,
-            paddingHorizontal: sizes.pickerPaddingHorizontal,
-            paddingVertical: sizes.pickerPaddingVertical,
+            backgroundColor: 'rgba(199,210,254,0.7)',
+            borderRadius: 14 * scale,
+            paddingHorizontal: 14 * scale,
+            paddingVertical: 8 * scale,
             marginBottom: sizes.pickerMarginBottom,
             borderWidth: 2,
-            borderColor: errors?.homeAddress ? 'red' : '#8d8d8dff'
+            borderColor: errors?.homeAddress ? '#ef4444' : '#6d4bd9'
           }}
         >
-          <Ionicons name="location-outline" size={sizes.iconSize} color="#0a3aca" style={{ marginRight: sizes.pickerPaddingHorizontal / 1.5 }} />
-          <Picker
-            ref={barangayPickerRef}
-            enabled={barangayList.length > 0}
-            selectedValue={barangay}
-            onValueChange={handleBarangayChange}
-            dropdownIconColor={barangayList.length > 0 ? "#0463fcff" : "#888"}
-            style={{ color: '#111827', flex: 1, fontSize: sizes.fontLarge }}
-          >
-            <Picker.Item
-              label="Select Barangay"
-              value=""
-              color="#555"
-              style={{ fontSize: sizes.fontLarge }}
-            />
-            {barangayList.map((brgy) => (
-              <Picker.Item
-                key={brgy}
-                label={brgy}
-                value={brgy}
-                color="#111827"
-                style={{ fontSize: sizes.fontLarge }}
-              />
-            ))}
-          </Picker>
+          <Ionicons name="location-outline" size={sizes.iconSize} color="#0a3aca" style={{ marginRight: 10 * scale }} />
+          <TextInput
+            ref={barangayInputRef}
+            placeholder="Select Barangay"
+            placeholderTextColor="#555"
+            value={barangay}
+            onChangeText={(text) => {
+              setBarangay(text);
+              setShowBarangayList(true);
+            }}
+            onFocus={() => setShowBarangayList(true)}
+            onBlur={() => setTimeout(() => setShowBarangayList(false), 120)}
+            onSubmitEditing={handleBarangaySubmit}
+            returnKeyType="done"
+            style={{ color: '#1f2937', flex: 1, fontSize: sizes.fontLarge, paddingVertical: 4 * scale, paddingRight: 6 * scale }}
+          />
+          <Ionicons name="chevron-down" size={sizes.iconSize} color="#5b21b6" />
 
         </View>
       )}
 
+      {matchedMunicipality && showBarangayList && filteredBarangays.length > 0 && (
+        <View
+          style={{
+            backgroundColor: 'rgba(199,210,254,0.7)',
+            borderWidth: 1,
+            borderColor: '#6d4bd9',
+            borderRadius: (isSingleBarangay ? 14 : 12) * scale,
+            marginTop: 4 * scale,
+            marginBottom: sizes.pickerMarginBottom,
+            maxHeight: isSingleBarangay ? 80 * scale : 200 * scale,
+            overflow: 'hidden',
+            paddingVertical: isSingleBarangay ? 6 * scale : 0,
+          }}
+        >
+          <ScrollView nestedScrollEnabled>
+            {filteredBarangays.map((brgy, idx) => (
+              <Pressable
+                key={brgy}
+                onPress={() => selectBarangay(brgy)}
+                style={({ pressed }) => ({
+                  paddingVertical: (isSingleBarangay ? 12 : 10) * scale,
+                  paddingHorizontal: (isSingleBarangay ? 18 : 16) * scale,
+                  backgroundColor: pressed ? 'rgba(199,210,254,0.9)' : 'transparent',
+                  borderTopWidth: idx === 0 ? 0 : 1,
+                  borderTopColor: '#e2d7fb',
+                  borderRadius: isSingleBarangay ? 10 * scale : 0,
+                  marginHorizontal: isSingleBarangay ? 8 * scale : 0,
+                })}
+              >
+                <Text style={{ color: '#2e1065', fontSize: sizes.fontLarge, paddingLeft: 8 * scale }}>
+                  {brgy}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       {/* Selected Address Display */}
-      {municipality && barangay && (
+      {matchedMunicipality && matchedBarangay && (
         <View style={{
           marginTop: sizes.containerPadding,
           padding: sizes.selectedAddressPadding,

@@ -73,8 +73,8 @@ export default function EntryScreen() {
                   <Image
                     source={require("../assets/images/qr-out.png")}
                     style={{
-                      width: 144 * scale,
-                      height: 144 * scale,
+                      width: 150 * scale,
+                      height: 150 * scale,
                     }}
                     resizeMode="contain"
                   />

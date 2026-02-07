@@ -22,7 +22,7 @@ export default function DuplicateVisitModal({ visible, onClose, onProceed, visit
     buttonMargin: 8 * scale,
     detailsPadding: 12 * scale,
     detailsBorderRadius: 12 * scale,
-    modalWidth: isPhone ? "90%" : 400 * scale,
+    modalWidth: isPhone ? "90%" : 400 * scale, 
   };
 
   const formatTime = (timestamp) => {

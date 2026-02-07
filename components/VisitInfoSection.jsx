@@ -84,7 +84,7 @@ const VisitInfoSection = forwardRef(({
     fieldTextSize: 16 * scale * fontScale,
     iconMarginRight: 4 * scale,
     iconMarginLeft: 6 * scale
-  };
+  }; 
 
   useImperativeHandle(ref, () => ({
     focus: () => {

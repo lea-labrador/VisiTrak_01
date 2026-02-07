@@ -35,15 +35,21 @@ const sizes = {
   buttonPadding: 10 * scale,
   cardPadding: 24 * scale,
   cardRadius: 20 * scale,
+  errorFont: 12 * scale,
+  errorIcon: 18 * scale,
+  errorPaddingV: 8 * scale,
+  errorPaddingH: 12 * scale,
+  errorRadius: 12 * scale,
 };
 
 export default function ExitScreen() {
-  const [name, setName] = useState("");
+  const [name, setName] = useState("");   
   const [focused, setFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [visitId, setVisitId] = useState(null);
   const [visitorName, setVisitorName] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const inputRef = useRef(null);
   const scrollRef = useRef(null);
@@ -54,6 +60,11 @@ export default function ExitScreen() {
     }, 300);
   }, []);
 
+  const handleNameChange = (text) => {
+    setName(text);
+    if (errorMessage) setErrorMessage("");
+  };
+
   const handleSubmit = async () => {
     if (!name.trim()) {
       Alert.alert("Error", "Please enter your name.");
@@ -62,6 +73,7 @@ export default function ExitScreen() {
 
     try {
       setLoading(true);
+      setErrorMessage("");
 
       const upperCaseName = name.trim().toUpperCase();
       
@@ -80,10 +92,11 @@ export default function ExitScreen() {
       scrollRef.current?.scrollTo({ y: 0, animated: true });
     } catch (error) {
       console.error("Checkout error:", error);
-      Alert.alert(
-        "Checkout Failed",
-        "No active visit found for this name. Please check the spelling or ensure you checked in first."
-      );
+      const message =
+        error?.message?.toLowerCase?.().includes("no active visit")
+          ? "No active visit found for this name. Please check the spelling or ensure you checked in first."
+          : "Checkout failed. Please try again.";
+      setErrorMessage(message);
     } finally {
       setLoading(false);
       setName(""); // Reset input
@@ -105,7 +118,7 @@ export default function ExitScreen() {
             <View className="flex-1">
               <Header title="VisiTrak" />
 
-              {/* Main Content */}
+              {/* Main Content */} 
               <View className="flex-1 justify-center px-5 py-8">
                 <View
                   className="bg-white/15 border border-orange-400 shadow-lg"
@@ -145,13 +158,17 @@ export default function ExitScreen() {
                   {/* Input */}
                   <View
                     className={`border rounded-xl ${
-                      focused ? "border-purple-500 bg-white" : "border-orange-400 bg-white/90"
+                      errorMessage
+                        ? "border-red-400 bg-white"
+                        : focused
+                          ? "border-purple-500 bg-white"
+                          : "border-orange-400 bg-white/90"
                     }`}
                   >
                     <TextInput
                       ref={inputRef}
                       value={name.toUpperCase()}
-                      onChangeText={setName}
+                      onChangeText={handleNameChange}
                       onFocus={() => {
                         setFocused(true);
                         scrollRef.current?.scrollTo({ y: 0, animated: true });
@@ -170,6 +187,54 @@ export default function ExitScreen() {
                       editable={!loading}
                     />
                   </View>
+
+                  {/* Error Message */}
+                  {errorMessage ? (
+                    <View
+                      className="mt-4 border"
+                      style={{
+                        borderColor: "#E989B9",
+                        backgroundColor: "#6B3A79",
+                        borderRadius: sizes.errorRadius,
+                        paddingVertical: sizes.errorPaddingV,
+                        paddingHorizontal: sizes.errorPaddingH,
+                      }}
+                    >
+                      <View className="flex-row items-start">
+                        <View
+                          style={{
+                            width: sizes.errorIcon * 1.6,
+                            height: sizes.errorIcon * 1.6,
+                            borderRadius: (sizes.errorIcon * 1.6) / 2,
+                            backgroundColor: "#7E4A8E",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            marginTop: 2 * scale,
+                          }}
+                        >
+                          <AntDesign
+                            name="warning"
+                            size={sizes.errorIcon}
+                            color="#F3B2D3"
+                          />
+                        </View>
+                        <View className="ml-3 flex-1">
+                          <Text
+                            className="text-white font-semibold"
+                            style={{ fontSize: sizes.errorFont + 1 }}
+                          >
+                            No active visit found
+                          </Text>
+                          <Text
+                            className="text-white/90 mt-1"
+                            style={{ fontSize: sizes.errorFont }}
+                          >
+                            {errorMessage}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  ) : null}
 
                   {/* Submit Button */}
                   <Pressable

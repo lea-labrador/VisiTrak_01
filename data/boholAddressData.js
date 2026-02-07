@@ -9,27 +9,27 @@ export const boholAddressData = {
   ],
   
   "Alburquerque": [
-    "Angilan", "Basacdacu", "Buenavista", "Cantomugcad", "Dangay", 
-    "East Poblacion", "Ponong", "Salon", "Santa Filomena", 
+    "Bahi", "Basacdacu", "Cantiguib", "Dangay", 
+    "East Poblacion", "Ponong","San Agustin", "Santa Filomena", 
     "Tagbuane", "Toril", "West Poblacion"
   ],
   
   "Alicia": [
-    "Cabatang", "Cagawasan", "Cambaol", "Del Monte", "La Hacienda", 
-    "Napo", "Poblacion", "Putlongcam", "Sudlon", "Villa Aurora"
+    "Cabatang", "Cagongcagong", "Cambaol", "Cayacay", "Del Monte", 
+    "Katipunan", "La Hacienda", "Mahayag", "Napo", "Pagahat", 
+    "Poblacion (Calingganay)", "Progreso", "Putlongcam", "Sudlon (Omhor)", "Untaga"
   ],
   
   "Anda": [
-    "Almaria", "Bacong", "Badiang", "Buenasuerte", "Candabong", 
-    "Casica", "Katipunan", "Linawan", "Lundag", "Poblacion", 
-    "Suba", "Talisay", "Tanod", "Virgen"
+    "Almaria", "Bacong", "Buenasuerte", "Candabong", "Casica", 
+    "Katipunan", "Linawan", "Lundag", "Poblacion", "Santa Cruz", 
+    "Suba", "Talisay", "Tanod", "Tawid", "Virgen"
   ],
   
   "Antequera": [
-    "Angilan", "Bantolinao", "Bicahan", "Bitaugan", "Cansibuan", 
-    "Cantagay", "Celing", "Danao", "Danicop", "Mag-aso", 
-    "Poblacion", "Quinapon-an", "Tabuan", "Tagubaas", 
-    "Tupas", "Ubojan", "Viga"
+    "Angilan", "Bantolinao", "Bicahan", "Bitaugan", "Bungahan", "Canlaas", "Can-omay", 
+    "Cansibuan", "Celing", "Danao", "Danicop", "Mag-aso", "Poblacion", "Quinapon-an", 
+    "Santo Rosario", "Tabuan", "Tagubaas", "Tupas", "Ubojan", "Viga", "Villa Aurora (Canoc-oc)"
   ],
   
   "Baclayon": [

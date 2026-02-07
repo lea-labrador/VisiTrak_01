@@ -37,7 +37,7 @@ export default function ContactInfoSection({
     warningFontSize: 12 * scale,
     warningMargin: 8 * scale,
     fieldSpacing: 18 * scale
-  };
+  }; 
 
   // -----------------------
   // Handlers

@@ -22,8 +22,7 @@ import backG01 from "../assets/images/backG009.png";
 import backG02 from "../assets/images/backG004.png";
 import backG03 from "../assets/images/backG010.png";
 
-import { addVisit, checkActiveVisitByNameToday } from "../lib/visits.service";
-9
+import { addVisit, checkActiveVisitByName } from "../lib/visits.service";
 export default function VisiTrakForm() {
   const router = useRouter();
   const scrollRef = useRef(null);
@@ -99,7 +98,7 @@ export default function VisiTrakForm() {
       setCheckingName(true);
       try {
         // 🔹 Fetch previous active visit info
-        const existingVisit = await checkActiveVisitByNameToday(name);
+        const existingVisit = await checkActiveVisitByName(name);
         if (existingVisit) {
           setNameExistsToday(true);
           setDuplicateVisitInfo(existingVisit); // Save previous visit

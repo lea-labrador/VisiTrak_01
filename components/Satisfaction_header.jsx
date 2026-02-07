@@ -20,7 +20,7 @@ export default function Header({ title }) {
           className="bg-white/20 rounded-lg justify-center items-center border-2 border-blue-200 shadow-md"
           style={{
             width: 44 * scale,
-            height: 44 * scale,
+            height: 44 * scale, 
             padding: 8 * scale,
             marginLeft: 10 * scale,
           }}

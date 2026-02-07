@@ -34,7 +34,7 @@ const satisfactionLabels = [
   "Satisfied",
   "Very Satisfied",
 ];
-
+ 
 export default function EmojiRating({ value, onChange }) {
   const [notApplicable, setNotApplicable] = useState(false);
   const { width } = useWindowDimensions();

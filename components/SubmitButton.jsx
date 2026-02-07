@@ -19,7 +19,7 @@ export default function SubmitButton({ onPress, title = "Submit Registration" })
   return (
     <Pressable
       onPress={onPress}
-      className="w-11/12 mx-auto bg-purple-700 justify-center items-center shadow-lg"
+      className="w-11/12 mx-auto bg-[#7816EF] justify-center items-center shadow-lg"
       style={{
         height: sizes.height,
         marginTop: sizes.marginTop,
@@ -37,3 +37,4 @@ export default function SubmitButton({ onPress, title = "Submit Registration" })
     </Pressable>
   );
 }
+ 

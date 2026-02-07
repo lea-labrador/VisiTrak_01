@@ -11,7 +11,7 @@
       "enabled": true,
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 3000,
-      "url": "https://u.expo.dev/4b12fd42-5057-4e23-8fe0-79b1ac255848"
+      "url": "https://u.expo.dev/51968ea6-3e16-4fde-8a72-953f7a842747"
     },
     "runtimeVersion": {
       "policy": "appVersion"
@@ -33,6 +33,8 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
@@ -72,9 +74,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "4b12fd42-5057-4e23-8fe0-79b1ac255848"
+        "projectId": "51968ea6-3e16-4fde-8a72-953f7a842747"
       }
     },
-    "owner": "lealabrador"
+    "owner": "lea_l"
   }
 }

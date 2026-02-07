@@ -84,14 +84,14 @@ export default function SuccessModal({ visible, onClose, visitId, visitorName })
               style={{ fontSize: sizes.primaryFont }}
             >
               CHECK OUT & SURVEY
-            </Text>
+            </Text> 
           </Pressable>
 
           {/* SECONDARY BUTTON */}
           <Pressable
             onPress={() => {
               onClose();
-              router.push("./");
+              router.push("/ThankYouScreen");
             }}
             className="w-full items-center justify-center bg-white"
             style={{

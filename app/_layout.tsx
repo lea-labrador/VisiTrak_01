@@ -1,16 +1,22 @@
 import { Stack } from "expo-router";
-import "@/global.css"
+import "@/global.css";
+import { useGlobalAutoCheckout } from "../hooks/useGlobalAutoCheckout";
 
 export default function RootLayout() {
-  return <Stack>  
-  <Stack.Screen name="index" options={{ headerShown: false }} />
-  <Stack.Screen name="VisiTrakForm" options={{ headerShown: false }} />
-  <Stack.Screen name="CheckInSummary" options={{ headerShown: false }} />
-  <Stack.Screen name="ExitScreen" options={{ headerShown: false }} />
-  <Stack.Screen name="FeedbackForm" options={{ headerShown: false }} />
-  <Stack.Screen name="ThankYouScreen" options={{ headerShown: false }} />
-  <Stack.Screen name="ScanScreen" options={{ headerShown: false }} />
-  <Stack.Screen name="ScanScreenOut" options={{ headerShown: false }} />
-  <Stack.Screen name="exit" options={{ headerShown: false }} />
-  </Stack>
+  // 🔁 Runs auto-checkout app-wide (once per day after 7:30 PM)
+  useGlobalAutoCheckout();
+
+  return (
+    <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="VisiTrakForm" options={{ headerShown: false }} />
+      <Stack.Screen name="CheckInSummary" options={{ headerShown: false }} />
+      <Stack.Screen name="ExitScreen" options={{ headerShown: false }} />
+      <Stack.Screen name="FeedbackForm" options={{ headerShown: false }} />
+      <Stack.Screen name="ThankYouScreen" options={{ headerShown: false }} />
+      <Stack.Screen name="ScanScreen" options={{ headerShown: false }} />
+      <Stack.Screen name="ScanScreenOut" options={{ headerShown: false }} />
+      <Stack.Screen name="exit" options={{ headerShown: false }} />
+    </Stack>
+  );
 }
