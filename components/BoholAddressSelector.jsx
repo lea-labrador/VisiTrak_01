@@ -1,11 +1,11 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
+import React, { useState, useEffect, useMemo, forwardRef, useImperativeHandle, useRef } from "react";
 import { View, Text, useWindowDimensions, TextInput, Pressable, ScrollView } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { 
-  getMunicipalities,
-  getBarangays,
+  loadBoholMunicipalitiesWithMeta,
+  loadBoholBarangaysWithMeta,
   formatAddressForDB
-} from "../data/boholAddressData";
+} from "../data/boholAddressApi";
 
 const BoholAddressSelector = forwardRef(({ 
   homeAddress, 
@@ -18,7 +18,6 @@ const BoholAddressSelector = forwardRef(({
 }, ref) => {
   const { width } = useWindowDimensions();
   const scale = Math.min(Math.max(width / 400, 0.8), 1.8);
-  const isPhone = width < 600;
 
   // Responsive sizes object
   const sizes = {
@@ -43,12 +42,35 @@ const BoholAddressSelector = forwardRef(({
   const [showBarangayList, setShowBarangayList] = useState(false);
   const municipalityInputRef = useRef(null);
   const barangayInputRef = useRef(null);
+  const [municipalityOptions, setMunicipalityOptions] = useState([]);
+  const [barangayCache, setBarangayCache] = useState({});
+  const [isLoadingMunicipalities, setIsLoadingMunicipalities] = useState(false);
+  const [isLoadingBarangays, setIsLoadingBarangays] = useState(false);
 
-  const municipalities = getMunicipalities();
+  const municipalities = useMemo(
+    () => municipalityOptions.map((item) => item.name),
+    [municipalityOptions]
+  );
+  const municipalityCodeMap = useMemo(() => {
+    const map = new Map();
+    municipalityOptions.forEach((item) => {
+      if (!item?.name) return;
+      map.set(item.name, item.code || item.name);
+    });
+    return map;
+  }, [municipalityOptions]);
+
   const normalizedMunicipality = municipality.trim().toLowerCase();
   const matchedMunicipality =
     municipalities.find((mun) => mun.toLowerCase() === normalizedMunicipality) || "";
-  const barangayList = matchedMunicipality ? getBarangays(matchedMunicipality) : [];
+  const matchedMunicipalityCode = matchedMunicipality
+    ? municipalityCodeMap.get(matchedMunicipality) || matchedMunicipality
+    : "";
+  const barangayList = matchedMunicipalityCode
+    ? Array.isArray(barangayCache[matchedMunicipalityCode])
+      ? barangayCache[matchedMunicipalityCode]
+      : []
+    : [];
   const normalizedBarangay = barangay.trim().toLowerCase();
   const matchedBarangay =
     barangayList.find((brgy) => brgy.toLowerCase() === normalizedBarangay) || "";
@@ -64,6 +86,73 @@ const BoholAddressSelector = forwardRef(({
     : barangayList;
   const isSingleMunicipality = filteredMunicipalities.length === 1;
   const isSingleBarangay = filteredBarangays.length === 1;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadMunicipalities = async () => {
+      setIsLoadingMunicipalities(true);
+      try {
+        const result = await loadBoholMunicipalitiesWithMeta();
+        if (!isMounted) return;
+        setMunicipalityOptions(result.items);
+      } finally {
+        if (isMounted) setIsLoadingMunicipalities(false);
+      }
+    };
+
+    loadMunicipalities();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!matchedMunicipality || !matchedMunicipalityCode) {
+      setIsLoadingBarangays(false);
+      return;
+    }
+    if (
+      Array.isArray(barangayCache[matchedMunicipalityCode]) &&
+      barangayCache[matchedMunicipalityCode].length > 0
+    ) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadBarangays = async () => {
+      setIsLoadingBarangays(true);
+      try {
+        const result = await loadBoholBarangaysWithMeta({
+          municipalityCode: matchedMunicipalityCode,
+          municipalityName: matchedMunicipality,
+        });
+        if (!isMounted) return;
+        if (result.items.length > 0) {
+          setBarangayCache((prev) => ({
+            ...prev,
+            [matchedMunicipalityCode]: result.items,
+          }));
+        }
+      } catch {
+        if (!isMounted) return;
+        setBarangayCache((prev) => ({
+          ...prev,
+          [matchedMunicipalityCode]: [],
+        }));
+      } finally {
+        if (isMounted) setIsLoadingBarangays(false);
+      }
+    };
+
+    loadBarangays();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [matchedMunicipality, matchedMunicipalityCode, barangayCache]);
 
   // Expose focus method to parent
   useImperativeHandle(ref, () => ({
@@ -133,6 +222,8 @@ const BoholAddressSelector = forwardRef(({
   };
 
   const handleMunicipalitySubmit = () => {
+    if (isLoadingMunicipalities) return;
+
     const match = municipalities.find(
       (mun) => mun.toLowerCase() === municipality.trim().toLowerCase()
     );
@@ -151,6 +242,7 @@ const BoholAddressSelector = forwardRef(({
       municipalityInputRef.current?.focus?.();
       return;
     }
+    if (isLoadingBarangays) return;
 
     const match = barangayList.find(
       (brgy) => brgy.toLowerCase() === barangay.trim().toLowerCase()
@@ -167,7 +259,12 @@ const BoholAddressSelector = forwardRef(({
   return (
     <View style={{ marginTop: sizes.containerPadding }}>
       {/* Municipality Section */}
-      <View
+      <Pressable
+        onPress={() => {
+          if (isLoadingMunicipalities) return;
+          setShowMunicipalityList(true);
+          municipalityInputRef.current?.focus?.();
+        }}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -183,9 +280,10 @@ const BoholAddressSelector = forwardRef(({
         <Ionicons name="map-outline" size={sizes.iconSize} color="#0a3aca" style={{ marginRight: 10 * scale }} />
         <TextInput
           ref={municipalityInputRef}
-          placeholder="Select Municipality"
+          placeholder={isLoadingMunicipalities ? "Loading municipalities..." : "Select Municipality"}
           placeholderTextColor="#555"
           value={municipality}
+          editable={!isLoadingMunicipalities}
           onChangeText={(text) => {
             setMunicipality(text);
             if (barangay) setBarangay("");
@@ -195,11 +293,16 @@ const BoholAddressSelector = forwardRef(({
           onBlur={() => setTimeout(() => setShowMunicipalityList(false), 120)}
           onSubmitEditing={handleMunicipalitySubmit}
           returnKeyType="next"
+          autoCorrect={false}
+          spellCheck={false}
+          autoComplete="off"
+          textContentType="none"
+          importantForAutofill="no"
           style={{ color: '#1f2937', flex: 1, fontSize: sizes.fontLarge, paddingVertical: 4 * scale, paddingRight: 6 * scale }}
         />
         <Ionicons name="chevron-down" size={sizes.iconSize} color="#5b21b6" />
 
-      </View>
+      </Pressable>
 
       {showMunicipalityList && filteredMunicipalities.length > 0 && (
         <View
@@ -239,78 +342,91 @@ const BoholAddressSelector = forwardRef(({
         </View>
       )}
 
-      {/* Barangay Section */}
       {matchedMunicipality && (
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            backgroundColor: 'rgba(199,210,254,0.7)',
-            borderRadius: 14 * scale,
-            paddingHorizontal: 14 * scale,
-            paddingVertical: 8 * scale,
-            marginBottom: sizes.pickerMarginBottom,
-            borderWidth: 2,
-            borderColor: errors?.homeAddress ? '#ef4444' : '#6d4bd9'
-          }}
-        >
-          <Ionicons name="location-outline" size={sizes.iconSize} color="#0a3aca" style={{ marginRight: 10 * scale }} />
-          <TextInput
-            ref={barangayInputRef}
-            placeholder="Select Barangay"
-            placeholderTextColor="#555"
-            value={barangay}
-            onChangeText={(text) => {
-              setBarangay(text);
+        <>
+          {/* Barangay Section */}
+          <Pressable
+            onPress={() => {
+              if (isLoadingBarangays) return;
               setShowBarangayList(true);
+              barangayInputRef.current?.focus?.();
             }}
-            onFocus={() => setShowBarangayList(true)}
-            onBlur={() => setTimeout(() => setShowBarangayList(false), 120)}
-            onSubmitEditing={handleBarangaySubmit}
-            returnKeyType="done"
-            style={{ color: '#1f2937', flex: 1, fontSize: sizes.fontLarge, paddingVertical: 4 * scale, paddingRight: 6 * scale }}
-          />
-          <Ionicons name="chevron-down" size={sizes.iconSize} color="#5b21b6" />
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: 'rgba(199,210,254,0.7)',
+              borderRadius: 14 * scale,
+              paddingHorizontal: 14 * scale,
+              paddingVertical: 8 * scale,
+              marginBottom: sizes.pickerMarginBottom,
+              borderWidth: 2,
+              borderColor: errors?.homeAddress ? '#ef4444' : '#6d4bd9'
+            }}
+          >
+            <Ionicons name="location-outline" size={sizes.iconSize} color="#0a3aca" style={{ marginRight: 10 * scale }} />
+            <TextInput
+              ref={barangayInputRef}
+              placeholder={isLoadingBarangays ? "Loading barangays..." : "Select Barangay"}
+              placeholderTextColor="#555"
+              value={barangay}
+              editable={!isLoadingBarangays}
+              onChangeText={(text) => {
+                setBarangay(text);
+                setShowBarangayList(true);
+              }}
+              onFocus={() => setShowBarangayList(true)}
+              onBlur={() => setTimeout(() => setShowBarangayList(false), 120)}
+              onSubmitEditing={handleBarangaySubmit}
+              returnKeyType="done"
+              autoCorrect={false}
+              spellCheck={false}
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
+              style={{ color: '#1f2937', flex: 1, fontSize: sizes.fontLarge, paddingVertical: 4 * scale, paddingRight: 6 * scale }}
+            />
+            <Ionicons name="chevron-down" size={sizes.iconSize} color="#5b21b6" />
 
-        </View>
-      )}
+          </Pressable>
 
-      {matchedMunicipality && showBarangayList && filteredBarangays.length > 0 && (
-        <View
-          style={{
-            backgroundColor: 'rgba(199,210,254,0.7)',
-            borderWidth: 1,
-            borderColor: '#6d4bd9',
-            borderRadius: (isSingleBarangay ? 14 : 12) * scale,
-            marginTop: 4 * scale,
-            marginBottom: sizes.pickerMarginBottom,
-            maxHeight: isSingleBarangay ? 80 * scale : 200 * scale,
-            overflow: 'hidden',
-            paddingVertical: isSingleBarangay ? 6 * scale : 0,
-          }}
-        >
-          <ScrollView nestedScrollEnabled>
-            {filteredBarangays.map((brgy, idx) => (
-              <Pressable
-                key={brgy}
-                onPress={() => selectBarangay(brgy)}
-                style={({ pressed }) => ({
-                  paddingVertical: (isSingleBarangay ? 12 : 10) * scale,
-                  paddingHorizontal: (isSingleBarangay ? 18 : 16) * scale,
-                  backgroundColor: pressed ? 'rgba(199,210,254,0.9)' : 'transparent',
-                  borderTopWidth: idx === 0 ? 0 : 1,
-                  borderTopColor: '#e2d7fb',
-                  borderRadius: isSingleBarangay ? 10 * scale : 0,
-                  marginHorizontal: isSingleBarangay ? 8 * scale : 0,
-                })}
-              >
-                <Text style={{ color: '#2e1065', fontSize: sizes.fontLarge, paddingLeft: 8 * scale }}>
-                  {brgy}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
+          {showBarangayList && filteredBarangays.length > 0 && (
+            <View
+              style={{
+                backgroundColor: 'rgba(199,210,254,0.7)',
+                borderWidth: 1,
+                borderColor: '#6d4bd9',
+                borderRadius: (isSingleBarangay ? 14 : 12) * scale,
+                marginTop: 4 * scale,
+                marginBottom: sizes.pickerMarginBottom,
+                maxHeight: isSingleBarangay ? 80 * scale : 200 * scale,
+                overflow: 'hidden',
+                paddingVertical: isSingleBarangay ? 6 * scale : 0,
+              }}
+            >
+              <ScrollView nestedScrollEnabled>
+                {filteredBarangays.map((brgy, idx) => (
+                  <Pressable
+                    key={brgy}
+                    onPress={() => selectBarangay(brgy)}
+                    style={({ pressed }) => ({
+                      paddingVertical: (isSingleBarangay ? 12 : 10) * scale,
+                      paddingHorizontal: (isSingleBarangay ? 18 : 16) * scale,
+                      backgroundColor: pressed ? 'rgba(199,210,254,0.9)' : 'transparent',
+                      borderTopWidth: idx === 0 ? 0 : 1,
+                      borderTopColor: '#e2d7fb',
+                      borderRadius: isSingleBarangay ? 10 * scale : 0,
+                      marginHorizontal: isSingleBarangay ? 8 * scale : 0,
+                    })}
+                  >
+                    <Text style={{ color: '#2e1065', fontSize: sizes.fontLarge, paddingLeft: 8 * scale }}>
+                      {brgy}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+        </>
       )}
 
       {/* Selected Address Display */}
@@ -341,5 +457,7 @@ const BoholAddressSelector = forwardRef(({
     </View>
   );
 });
+
+BoholAddressSelector.displayName = "BoholAddressSelector";
 
 export default BoholAddressSelector;

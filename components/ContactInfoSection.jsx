@@ -120,7 +120,6 @@ export default function ContactInfoSection({
             value={contactNumber || "09"}
             onChangeText={handleContactChange}
             keyboardType="phone-pad"
-            uppercase
             scale={scale}
             hasError={errors?.contactNumber}
             ref={contactNumberRef}

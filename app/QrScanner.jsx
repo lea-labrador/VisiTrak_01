@@ -135,6 +135,12 @@ export default function QrScanner({ onScanned, keyCode, setKeyCode }) {
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholderTextColor="#D1D5DB"
+          autoCapitalize="characters"
+          autoCorrect={false}
+          spellCheck={false}
+          autoComplete="off"
+          textContentType="none"
+          importantForAutofill="no"
           className="bg-white/10 border rounded-xl text-white"
           style={{
             fontSize: 14 * scale,

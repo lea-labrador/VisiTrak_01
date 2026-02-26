@@ -276,14 +276,18 @@ export default function VisiTrakForm() {
           >
             <TermsAgreement
               agreeTerms={agreeTerms}
-              setAgreeTerms={setAgreeTerms}
+              setAgreeTerms={setAgreeTerms} 
               ref={agreeTermsRef}
               errors={errors}
               setErrors={setErrors}
             />
           </View>
 
-          <SubmitButton onPress={onSubmit} disabled={submitting} />
+          <SubmitButton
+            onPress={onSubmit}
+            disabled={submitting}
+            title={submitting ? "Submitting..." : "Submit Registration"}
+          />
           <Footer />
         </ScrollView>
 

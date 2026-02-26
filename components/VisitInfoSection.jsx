@@ -4,7 +4,7 @@ import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import SectionTitle from "./SectionTitle";
 import SelectField from "./SelectField";
 import InputField from "./InputField";
-import { fetchOffices } from "../lib/info.services";
+import { fetchOfficesWithMeta } from "../lib/info.services";
 
 const VisitInfoSection = forwardRef(({
   purpose,
@@ -91,80 +91,78 @@ const VisitInfoSection = forwardRef(({
       officeFieldRef.current?.focus?.();
     }
   }));
-
   // Fetch offices on component mount
   useEffect(() => {
+    const applyVisitorOfficeData = (visitorOffices) => {
+      setOffices(visitorOffices);
+
+      const officeNames = visitorOffices
+        .map((o) => o.name)
+        .filter((name) => name && name.trim() !== "");
+
+      setAllOffices([...officeNames, "Other"]);
+      setFilteredOffices([...officeNames, "Other"]);
+
+      const purposeSet = new Set();
+      visitorOffices.forEach((entry) => {
+        if (Array.isArray(entry.purposes)) {
+          entry.purposes.forEach((p) => {
+            if (p?.name && p.name.trim() !== "") {
+              purposeSet.add(p.name);
+            }
+          });
+        }
+      });
+
+      const purposesArray = Array.from(purposeSet);
+      setAllPurposes(purposesArray);
+      setFilteredPurposes([...purposesArray, "Other"]);
+
+      let allStaffList = [];
+      visitorOffices.forEach((entry) => {
+        if (Array.isArray(entry.staffToVisit)) {
+          entry.staffToVisit.forEach((staff) => {
+            if (staff?.name && staff.name.trim() !== "") {
+              allStaffList.push({
+                name: staff.name,
+                office: entry.name,
+                purpose: staff.purpose || null,
+              });
+            }
+          });
+        }
+      });
+
+      setAllStaff(allStaffList);
+      setFilteredStaffOptions(allStaffList.map((s) => s.name));
+
+      console.log(
+        `Loaded ${visitorOffices.length} visitor offices (excluding super admin)`
+      );
+      console.log(`${purposesArray.length} purposes available`);
+      console.log(`${allStaffList.length} staff members available`);
+    };
+
     const loadOffices = async () => {
       try {
         setIsLoading(true);
-        const fetchedOffices = await fetchOffices();
-        
-        // Filter out super admin offices (role === "super")
-        const visitorOffices = fetchedOffices.filter(office => 
-          office.role !== "super" && office.name && office.name.trim() !== ""
+        const officeResult = await fetchOfficesWithMeta();
+
+        let visitorOffices = officeResult.items.filter(
+          (entry) =>
+            entry.role !== "super" &&
+            entry.name &&
+            entry.name.trim() !== ""
         );
-        
-        setOffices(visitorOffices);
-        
-        // Extract all unique office names (excluding super admin)
-        const officeNames = visitorOffices
-          .map(o => o.name)
-          .filter(name => name && name.trim() !== "");
-        
-        setAllOffices([...officeNames, "Other"]);
-        setFilteredOffices([...officeNames, "Other"]);
-        
-        // Extract all unique purposes from visitor offices only
-        const purposeSet = new Set();
-        visitorOffices.forEach(office => {
-          if (office.purposes && Array.isArray(office.purposes)) {
-            office.purposes.forEach(p => {
-              if (p.name && p.name.trim() !== "") {
-                purposeSet.add(p.name);
-              }
-            });
-          }
-        });
-        
-        const purposesArray = Array.from(purposeSet);
-        setAllPurposes(purposesArray);
-        setFilteredPurposes([...purposesArray, "Other"]);
-        
-        // Extract all staff from visitor offices only
-        const allStaffList = [];
-        visitorOffices.forEach(office => {
-          if (office.staffToVisit && Array.isArray(office.staffToVisit)) {
-            office.staffToVisit.forEach(staff => {
-              if (staff.name && staff.name.trim() !== "") {
-                allStaffList.push({
-                  name: staff.name,
-                  office: office.name,
-                  purpose: staff.purpose || null
-                });
-              }
-            });
-          }
-        });
-        
-        setAllStaff(allStaffList);
-        setFilteredStaffOptions(allStaffList.map(s => s.name));
-        
-        console.log(`✅ Loaded ${visitorOffices.length} visitor offices (excluding super admin)`);
-        console.log(`✅ ${purposesArray.length} purposes available`);
-        console.log(`✅ ${allStaffList.length} staff members available`);
-        
+
+        applyVisitorOfficeData(visitorOffices);
       } catch (error) {
-        console.error("❌ Error fetching offices:", error);
-        // Fallback data (excluding super admin)
-        const fallbackOffices = ["REGISTRAR", "CLINIC", "CASHIER", "CCIS/CTAS OFFICE", "Other"];
-        const fallbackPurposes = ["COR/TOR", "MEDICAL", "PAYMENT", "INQUIRY", "SUBMISSION OF REQUIREMENTS", "Other"];
-        
-        setAllOffices(fallbackOffices);
-        setFilteredOffices(fallbackOffices);
-        setAllPurposes(fallbackPurposes.filter(p => p !== "Other"));
-        setFilteredPurposes(fallbackPurposes);
-        
-        Alert.alert("Info", "Could not load office data. Using default options.");
+        console.error("Error fetching offices:", error);
+        applyVisitorOfficeData([]);
+        Alert.alert(
+          "Info",
+          "Could not load office and instructor data."
+        );
       } finally {
         setIsLoading(false);
       }
@@ -394,37 +392,6 @@ const VisitInfoSection = forwardRef(({
     );
   }
 
-  // Show message if no offices are found
-  if (!isLoading && offices.length === 0) {
-    return (
-      <View style={{ marginTop: sizes.sectionMarginTop, paddingHorizontal: sizes.paddingHorizontal }}>
-        <SectionTitle
-          icon={<Ionicons name="location-outline" size={sizes.iconSize} color="#b6b6b6" />}
-          text="Visit Information"
-        />
-        <View style={{ 
-          backgroundColor: "rgba(255,255,255,0.1)", 
-          borderWidth: sizes.containerBorderWidth, 
-          borderColor: "#6366f1", 
-          borderRadius: sizes.containerBorderRadius, 
-          padding: sizes.containerPadding, 
-          marginTop: sizes.containerMarginTop, 
-          alignItems: "center"
-        }}>
-          <Ionicons name="alert-circle-outline" size={sizes.alertIconSize} color="#ff6b6b" />
-          <Text style={{ 
-            color: "#fff", 
-            fontSize: sizes.messageTextSize, 
-            marginTop: sizes.messageMarginTop,
-            textAlign: "center"
-          }}>
-            No visitor offices available. Please contact the administrator.
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View style={{ marginTop: sizes.sectionMarginTop, paddingHorizontal: sizes.paddingHorizontal }}>
       <SectionTitle
@@ -440,7 +407,6 @@ const VisitInfoSection = forwardRef(({
         padding: sizes.containerPadding, 
         marginTop: sizes.containerMarginTop 
       }}>
-
         {/* STAFF */}
         <SelectField
           ref={staffFieldRef}
@@ -583,4 +549,7 @@ const VisitInfoSection = forwardRef(({
   );
 });
 
+VisitInfoSection.displayName = "VisitInfoSection";
+
 export default VisitInfoSection;
+

@@ -1,9 +1,10 @@
 import { Stack } from "expo-router";
 import "@/global.css";
+import { useOfflineSync } from "../hooks/useOfflineSync";
 import { useGlobalAutoCheckout } from "../hooks/useGlobalAutoCheckout";
 
 export default function RootLayout() {
-  // 🔁 Runs auto-checkout app-wide (once per day after 7:30 PM)
+  useOfflineSync();
   useGlobalAutoCheckout();
 
   return (

@@ -1,4 +1,14 @@
-import {View, Text, ImageBackground, Image, Pressable, StatusBar, useWindowDimensions,SafeAreaView} from "react-native";
+import {
+  View,
+  Text,
+  ImageBackground,
+  Image,
+  Pressable,
+  StatusBar,
+  useWindowDimensions,
+  SafeAreaView,
+  ScrollView,
+} from "react-native";
 import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import Card from "../components/Card";
@@ -9,115 +19,169 @@ import Header from "../components/Header";
 
 export default function EntryScreen() {
   const { width, height } = useWindowDimensions();
+  const isTablet = width >= 768;
+  const isLargeTablet = width >= 1024;
+  const isSmallPhone = width < 360;
+  const isShortHeight = height < 700;
+  const elementBump = 1.06;
 
-  // 📱 Responsive scaling tiers
-  const isLarge = width > 800; // tablet or large screen
-  const scale = isLarge ? 1.4 : width > 600 ? 1.2 : 1;
+  // Balanced responsiveness for both portrait/landscape screens.
+  const baseScale = Math.min(Math.max(Math.min(width / 400, height / 860), 0.82), 1.4);
+  const tabletBoost = isTablet ? (isLargeTablet ? 1.24 : 1.16) : 1;
+  const scale = baseScale * tabletBoost;
+
+  const sizes = {
+    cardMaxWidth: isTablet ? (isLargeTablet ? 860 : 760) : 520,
+    cardPaddingV: (isShortHeight ? 18 : 22) * scale,
+    cardPaddingH: (isTablet ? 28 : 22) * scale,
+    cardMarginV: (isShortHeight ? 12 : 20) * scale,
+    cardInnerTop: (isShortHeight ? 10 : 14) * scale,
+    qrCode: (isShortHeight ? 120 : isTablet ? 150 : 140) * scale * elementBump,
+    qrFrameExtra: 20 * scale,
+    qrImageExtra: 10 * scale,
+    qrMarginBottom: (isShortHeight ? 16 : 22) * scale,
+    scanFont: (isShortHeight ? 17 : isTablet ? 19 : 18) * scale * elementBump,
+    buttonFont: (isShortHeight ? 15 : isTablet ? 17 : 16) * scale * elementBump,
+    buttonMinHeight: (isShortHeight ? 46 : isTablet ? 56 : 50) * scale * elementBump,
+    buttonWidth: isTablet ? width * 0.66 : isSmallPhone ? width * 0.86 : width * 0.74,
+    buttonMarginTop: (isShortHeight ? 14 : 18) * scale,
+    buttonIcon: (isTablet ? 24 : 22) * scale * elementBump,
+    arrowIcon: (isTablet ? 20 : 18) * scale * elementBump,
+    contentPadX: isTablet ? 36 : 14,
+    contentPadTop: isShortHeight ? 6 : 0,
+    footerFont: 15 * scale,
+    headerPaddingTop: (StatusBar.currentHeight ?? 0) + (isTablet ? 20 : 10),
+  };
 
   return (
     <ImageBackground
       source={require("../assets/images/BG009.png")}
-      className="flex-1"
+      style={{ flex: 1 }}
       resizeMode="cover"
     >
-      {/* Safe area wrapper prevents overlap with system top bar */}
-      <SafeAreaView className="flex-1">
-        <View className="flex-1">
-          {/* 🔹 Header */}
-          <View
-            className="px-6"
-            style={{ paddingTop: (StatusBar.currentHeight || 0) + 10 * scale }}
-          >
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <View style={{ paddingHorizontal: 24, paddingTop: sizes.headerPaddingTop }}>
             <Header title="VisiTrak" />
           </View>
 
-          {/* 🔸 Main Content */}
-          <View
-            className="flex-1 justify-center px-6"
-            style={{
-              paddingHorizontal: 24 * scale,
-              marginTop: 20 * scale,
-              marginBottom: 20 * scale,
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: isShortHeight ? "flex-start" : "center",
+              paddingHorizontal: sizes.contentPadX,
+              paddingTop: sizes.contentPadTop,
+              paddingBottom: 8,
             }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <Card
-              style={{
-                transform: [{ scale }],
-                maxWidth: Math.min(width * 0.9, 500 * scale),
-                alignSelf: "center",
-              }}
-            >
-              {/* Logos inside the card (aligned to right) */}
-              <Logos scale={scale} />
+            <View style={{ width: "100%", alignItems: "center" }}>
+              <Card
+                style={{
+                  width: "100%",
+                  maxWidth: sizes.cardMaxWidth,
+                  marginHorizontal: 0,
+                  marginVertical: sizes.cardMarginV,
+                  paddingVertical: sizes.cardPaddingV,
+                  paddingHorizontal: sizes.cardPaddingH,
+                }}
+              >
+                <Logos />
 
-              {/* Card Body */}
-              <View className="items-center mt-4">
-                <Text
-                  className="text-white font-semibold mb-4"
-                  style={{ fontSize: 18 * scale }}
-                >
-                  Scan QR Code
-                </Text>
-
-                {/* ✅ QR Placeholder */}
                 <View
-                  className="bg-white rounded-lg justify-center items-center mb-6"
                   style={{
-                    width: 160 * scale,
-                    height: 160 * scale,
-                    borderRadius: 12 * scale,
-                    shadowOpacity: 0.4,
-                    shadowRadius: 6 * scale,
+                    alignItems: "center",
+                    marginTop: sizes.cardInnerTop,
+                    width: "100%",
                   }}
                 >
-                  <Image
-                    source={require("../assets/images/qr-out.png")}
+                  <Text
                     style={{
-                      width: 150 * scale,
-                      height: 150 * scale,
-                    }}
-                    resizeMode="contain"
-                  />
-                </View>
-
-                {/* Divider */}
-                <Divider text="or" scale={scale} />
-
-                {/* ✅ Start Registration Button */}
-                <Link href="/ExitScreen" asChild>
-                  <Pressable
-                    className="flex-row items-center bg-white rounded-2xl shadow-md"
-                    style={{
-                      paddingVertical: 12 * scale,
-                      paddingHorizontal: 24 * scale,
-                      marginTop: 16 * scale,
-                      minWidth: width * 0.7,       
-                      maxWidth: width * 0.9,       
-                      justifyContent: "center",   
+                      color: "white",
+                      fontWeight: "600",
+                      fontSize: sizes.scanFont,
+                      marginBottom: 16,
+                      textAlign: "center",
                     }}
                   >
-                    <MaterialCommunityIcons
-                      name="file-document-outline"
-                      size={24 * scale}
-                      color="black"
+                    Scan QR Code
+                  </Text>
+
+                  <View
+                    style={{
+                      width: sizes.qrCode + sizes.qrFrameExtra,
+                      height: sizes.qrCode + sizes.qrFrameExtra,
+                      backgroundColor: "white",
+                      borderRadius: 16,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginBottom: sizes.qrMarginBottom,
+                    }}
+                  >
+                    <Image
+                      source={require("../assets/images/out_code.png")}
+                      style={{
+                        width: sizes.qrCode + sizes.qrImageExtra,
+                        height: sizes.qrCode + sizes.qrImageExtra,
+                      }}
+                      resizeMode="contain"
                     />
-                    <Text
-                      className="font-semibold ml-2 px-3"
-                      style={{ fontSize: 15 * scale }}
+                  </View>
+
+                  <Divider text="or" />
+
+                  <Link href="/ExitScreen" asChild>
+                    <Pressable
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: "white",
+                        borderRadius: 16,
+                        marginTop: sizes.buttonMarginTop,
+                        width: sizes.buttonWidth,
+                        maxWidth: "100%",
+                        minHeight: sizes.buttonMinHeight,
+                        paddingHorizontal: 14 * scale,
+                        paddingVertical: 8 * scale,
+                        shadowColor: "#000",
+                        shadowOpacity: 0.2,
+                        shadowOffset: { width: 0, height: 3 },
+                        shadowRadius: 4,
+                        elevation: 4,
+                        alignSelf: "center",
+                      }}
                     >
-                      Scan or tap to check Out 
-                    </Text>
-                    <Feather name="arrow-right" size={20 * scale} color="black" />
-                  </Pressable>
-                </Link>
+                      <MaterialCommunityIcons
+                        name="file-document-outline"
+                        size={sizes.buttonIcon}
+                        color="black"
+                      />
+                      <Text
+                        style={{
+                          fontSize: sizes.buttonFont,
+                          fontWeight: "600",
+                          marginHorizontal: 8,
+                          flexShrink: 1,
+                          textAlign: "center",
+                        }}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                      >
+                        Scan or tap to check Out
+                      </Text>
+                      <Feather name="arrow-right" size={sizes.arrowIcon} color="black" />
+                    </Pressable>
+                  </Link>
+                </View>
+              </Card>
+            </View>
+          </ScrollView>
 
-              </View>
-            </Card>
-          </View>
-
-          {/* 🔹 Footer */}
-          <View style={{ paddingBottom: 20 * scale }}>
-            <Footer scale={scale} />
+          <View style={{ alignItems: "center" }}>
+            <Footer fontSize={sizes.footerFont} compact />
           </View>
         </View>
       </SafeAreaView>

@@ -176,6 +176,12 @@ export default function ExitScreen() {
                       onBlur={() => setFocused(false)}
                       placeholder="Enter Your Name"
                       placeholderTextColor="#666"
+                      autoCapitalize="characters"
+                      autoCorrect={false}
+                      spellCheck={false}
+                      autoComplete="off"
+                      textContentType="none"
+                      importantForAutofill="no"
                       style={{
                         fontSize: sizes.inputFont,
                         paddingVertical: sizes.inputPaddingV,
@@ -259,7 +265,7 @@ export default function ExitScreen() {
                 </View>
               </View>
 
-              <Footer />
+              <Footer compact />
             </View>
           </ScrollView>
         </KeyboardAvoidingView>

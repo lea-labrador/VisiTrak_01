@@ -2,20 +2,12 @@
   "expo": {
     "name": "VisiTrak",
     "slug": "visitrak",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "default",
     "scheme": "visitrak",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "updates": {
-      "enabled": true,
-      "checkAutomatically": "ON_LOAD",
-      "fallbackToCacheTimeout": 3000,
-      "url": "https://u.expo.dev/51968ea6-3e16-4fde-8a72-953f7a842747"
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.lealabrador.visitrak",
@@ -65,7 +57,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -74,9 +67,13 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "51968ea6-3e16-4fde-8a72-953f7a842747"
+        "projectId": "5f48d494-2df7-457f-a74c-b2ea46ca745c"
       }
     },
-    "owner": "lea_l"
+    "owner": "lea_l",
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/5f48d494-2df7-457f-a74c-b2ea46ca745c"
+    }
   }
 }

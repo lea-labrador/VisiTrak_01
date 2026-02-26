@@ -1,7 +1,11 @@
 import React from "react";
 import { Pressable, Text, useWindowDimensions } from "react-native";
 
-export default function SubmitButton({ onPress, title = "Submit Registration" }) {
+export default function SubmitButton({
+  onPress,
+  title = "Submit Registration",
+  disabled = false,
+}) {
   const { width } = useWindowDimensions();
 
   // 🔹 Dynamic scaling (same logic as your other components)
@@ -19,6 +23,7 @@ export default function SubmitButton({ onPress, title = "Submit Registration" })
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       className="w-11/12 mx-auto bg-[#7816EF] justify-center items-center shadow-lg"
       style={{
         height: sizes.height,
@@ -26,6 +31,7 @@ export default function SubmitButton({ onPress, title = "Submit Registration" })
         marginBottom: sizes.marginBottom,
         borderRadius: sizes.borderRadius,
         paddingHorizontal: sizes.paddingHorizontal,
+        opacity: disabled ? 0.65 : 1,
       }}
     >
       <Text

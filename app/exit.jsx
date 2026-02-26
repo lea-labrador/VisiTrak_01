@@ -41,6 +41,12 @@ export default function ExitScreen() {
               onChangeText={setName}
               placeholder="Enter Your Name"
               placeholderTextColor="#555"
+              autoCapitalize="characters"
+              autoCorrect={false}
+              spellCheck={false}
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
               className="bg-white/80 rounded-xl px-5 py-4 text-lg border border-orange-400"
             />
 
