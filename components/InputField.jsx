@@ -20,6 +20,8 @@ const InputField = forwardRef(
       autoCapitalize,
       scale = 1,
       fontSize,
+      containerStyle,
+      inputStyle,
       ...textInputProps
     },
     ref
@@ -41,6 +43,7 @@ const InputField = forwardRef(
         style={{
           borderWidth: 2,
           borderColor: hasError ? "red" : "rgba(107,114,128,0.7)",
+          ...(containerStyle || {}),
         }}
       >
         {icon && <View style={{ marginRight: 20 }}>{icon}</View>}
@@ -58,6 +61,7 @@ const InputField = forwardRef(
             flex: 1,
             fontSize: fontSize ?? 16 * scale,
             color: "#000",
+            ...(inputStyle || {}),
           }}
           autoCapitalize={resolvedAutoCapitalize}
           autoCorrect={autoCorrect}

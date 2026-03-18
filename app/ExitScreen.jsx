@@ -7,7 +7,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
+  Modal,
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -47,6 +47,7 @@ export default function ExitScreen() {
   const [focused, setFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showNameRequiredModal, setShowNameRequiredModal] = useState(false);
   const [visitId, setVisitId] = useState(null);
   const [visitorName, setVisitorName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -67,7 +68,7 @@ export default function ExitScreen() {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      Alert.alert("Error", "Please enter your name.");
+      setShowNameRequiredModal(true);
       return;
     }
 
@@ -174,7 +175,7 @@ export default function ExitScreen() {
                         scrollRef.current?.scrollTo({ y: 0, animated: true });
                       }}
                       onBlur={() => setFocused(false)}
-                      placeholder="Enter Your Name"
+                      placeholder="Enter Your Full Name"
                       placeholderTextColor="#666"
                       autoCapitalize="characters"
                       autoCorrect={false}
@@ -277,6 +278,96 @@ export default function ExitScreen() {
           visitId={visitId}
           visitorName={visitorName}
         />
+
+        <Modal
+          visible={showNameRequiredModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowNameRequiredModal(false)}
+        >
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.45)",
+              justifyContent: "center",
+              alignItems: "center",
+              paddingHorizontal: 24 * scale,
+            }}
+          >
+            <View
+              style={{
+                width: "100%",
+                maxWidth: 320,
+                backgroundColor: "#ffffff",
+                borderRadius: 12 * scale,
+                paddingVertical: 16 * scale,
+                paddingHorizontal: 14 * scale,
+                borderWidth: 2,
+                borderColor: "#f97316",
+                alignItems: "center",
+              }}
+            >
+              <View
+                style={{
+                  width: 40 * scale,
+                  height: 40 * scale,
+                  borderRadius: 20 * scale,
+                  backgroundColor: "#ffedd5",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 8 * scale,
+                }}
+              >
+                <AntDesign name="warning" size={20 * scale} color="#ea580c" />
+              </View>
+
+              <Text
+                style={{
+                  fontSize: 16 * scale,
+                  fontWeight: "700",
+                  color: "#111827",
+                }}
+              >
+                Error
+              </Text>
+
+              <Text
+                style={{
+                  marginTop: 4 * scale,
+                  fontSize: 13 * scale,
+                  color: "#374151",
+                  textAlign: "center",
+                }}
+              >
+                Please enter your full name.
+              </Text>
+
+              <Pressable
+                onPress={() => {
+                  setShowNameRequiredModal(false);
+                  setTimeout(() => inputRef.current?.focus?.(), 100);
+                }}
+                style={{
+                  marginTop: 12 * scale,
+                  backgroundColor: "#7c3aed",
+                  borderRadius: 8 * scale,
+                  paddingVertical: 8 * scale,
+                  paddingHorizontal: 20 * scale,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#fff",
+                    fontWeight: "700",
+                    fontSize: 13 * scale,
+                  }}
+                >
+                  OK
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </LinearGradient>
   );

@@ -34,6 +34,7 @@ const SelectField = forwardRef(({
     iconMarginRight: 8 * scale,
     pickerFontSize: fontSize || (16 * scale * fontScale), // Use provided fontSize or default with fontScale
   };
+  const safeOptions = Array.isArray(options) ? options : [];
 
   useImperativeHandle(ref, () => ({
     focus: () => {
@@ -84,11 +85,12 @@ const SelectField = forwardRef(({
           style={{ fontSize: sizes.pickerFontSize }} // Apply to placeholder
         />
 
-        {options.map((opt, i) => (
+        {safeOptions.map((opt, i) => (
           <Picker.Item 
             key={i} 
             label={opt} 
             value={opt}
+            color="#111827"
             style={{ fontSize: sizes.pickerFontSize }} // Apply to each option
           />
         ))}

@@ -1,5 +1,11 @@
 import React, { useState, useRef } from "react";
-import { View, Text, useWindowDimensions, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  useWindowDimensions,
+  ActivityIndicator,
+  Switch,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import SectionTitle from "./SectionTitle";
 import InputField from "./InputField";
@@ -21,10 +27,11 @@ export default function PersonalInfoSection({
   onFullNameSubmit,
   onHomeAddressSubmit,
 }) {
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const [nameWarning, setNameWarning] = useState("");
   const [checkingDuplicate, setCheckingDuplicate] = useState(false);
   const debounceRef = useRef(null);
+  const [isOutsideBohol, setIsOutsideBohol] = useState(false);
 
   // -------------------------
   // Dynamic Scale Factor
@@ -48,6 +55,8 @@ export default function PersonalInfoSection({
     activityMarginLeft: 8 * scale,
     inputIconSize: 20 * scale,
     inputFontSize: 14 * scale,
+    toggleTextSize: 13 * scale,
+    toggleMarginBottom: 10 * scale,
   };
 
   // -------------------------
@@ -95,6 +104,21 @@ export default function PersonalInfoSection({
         setCheckingDuplicate(false);
       }
     }, 500);
+  };
+
+  const handleOutsideBoholToggle = () => {
+    setIsOutsideBohol((prev) => !prev);
+    setHomeAddress("");
+    if (setErrors) {
+      setErrors((prev) => ({ ...prev, homeAddress: false }));
+    }
+  };
+
+  const handleOutsideAddressChange = (text) => {
+    setHomeAddress(text);
+    if (errors?.homeAddress && setErrors) {
+      setErrors((prev) => ({ ...prev, homeAddress: false }));
+    }
   };
 
   // -------------------------
@@ -163,7 +187,7 @@ export default function PersonalInfoSection({
             icon={
               <Ionicons name="person-outline" size={sizes.inputIconSize} color="#0a3aca" />
             }
-            placeholder="Full Name"
+            placeholder="Full Name (e.g., first name and last name, middle name(optional)"
             value={fullName}
             onChangeText={handleNameChange}
             uppercase
@@ -174,17 +198,67 @@ export default function PersonalInfoSection({
           />
         </View>
 
-        {/* Bohol Address Selector */}
-        <View onLayout={onAddressLayout}>
-          <BoholAddressSelector
-            ref={homeAddressRef}
-            homeAddress={homeAddress}
-            setHomeAddress={setHomeAddress}
-            errors={errors}
-            setErrors={setErrors}
-            onAddressPartsChange={onAddressPartsChange}
-            onSubmitEditing={onHomeAddressSubmit}
+        {/* Outside Bohol Toggle */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Text
+            style={{
+              color: "#e5e7eb",
+              fontSize: sizes.toggleTextSize,
+              fontWeight: "600",
+            }}
+          >
+            Outside Bohol?
+          </Text>
+          <Switch
+            value={isOutsideBohol}
+            onValueChange={handleOutsideBoholToggle}
+            trackColor={{ false: "#6b7280", true: "#818cf8" }}
+            thumbColor={isOutsideBohol ? "#4f46e5" : "#f9fafb"}
+            ios_backgroundColor="#6b7280"
+            style={{
+              transform: [{ scaleX: isPhone ? 0.95 : 1 }, { scaleY: isPhone ? 0.95 : 1 }],
+            }}
           />
+        </View>
+
+        {/* Address */}
+        <View onLayout={onAddressLayout}>
+          {isOutsideBohol ? (
+            <InputField
+              ref={homeAddressRef}
+              icon={
+                <Ionicons
+                  name="location-outline"
+                  size={sizes.inputIconSize}
+                  color="#0a3aca"
+                />
+              }
+              placeholder="Complete Address (Outside Bohol)"
+              value={homeAddress}
+              onChangeText={handleOutsideAddressChange}
+              onSubmitEditing={onHomeAddressSubmit}
+              returnKeyType="next"
+              autoCapitalize="words"
+              scale={scale}
+              hasError={errors?.homeAddress}
+            />
+          ) : (
+            <BoholAddressSelector
+              ref={homeAddressRef}
+              homeAddress={homeAddress}
+              setHomeAddress={setHomeAddress}
+              errors={errors}
+              setErrors={setErrors}
+              onAddressPartsChange={onAddressPartsChange}
+              onSubmitEditing={onHomeAddressSubmit}
+            />
+          )}
         </View>
       </View>
     </View>

@@ -1,0 +1,172 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSuper() {
+      return signedIn() && request.auth.token.role == "super";
+    }
+
+    function isOwnOffice(officeId) {
+      return signedIn() && (
+        request.auth.uid == officeId ||
+        (
+          exists(/databases/$(database)/documents/offices/$(officeId)) &&
+          get(/databases/$(database)/documents/offices/$(officeId)).data.uid == request.auth.uid
+        )
+      );
+    }
+
+    function noLegacyPasswordFieldWrite() {
+      return !("password" in request.resource.data);
+    }
+
+    function noCredentialFieldWrite() {
+      return !(
+        "credentialHash" in request.resource.data ||
+        "credentialSalt" in request.resource.data ||
+        "credentialAlgo" in request.resource.data ||
+        "credentialIterations" in request.resource.data ||
+        "credentialKeyLength" in request.resource.data
+      );
+    }
+
+    function ownOfficeAllowedUpdate(officeId) {
+      return isOwnOffice(officeId) &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "passwordChanged",
+          "passwordChangedAt",
+          "lastLoginAt",
+          "updatedAt"
+        ]);
+    }
+
+    function isNumber(value) {
+      return value is int || value is float;
+    }
+
+    function validVisitCreate() {
+      return request.resource.data.keys().hasOnly([
+        "name",
+        "address",
+        "office",
+        "purpose",
+        "contactNumber",
+        "email",
+        "staffName",
+        "rating",
+        "comment",
+        "status",
+        "autoCheckedOut",
+        "checkInSource",
+        "checkInTime",
+        "checkOutTime",
+        "createdAt",
+        "feedbackUpdatedAt"
+      ]) &&
+      request.resource.data.keys().hasAll(["name", "office", "purpose", "status"]) &&
+      request.resource.data.name is string && request.resource.data.name.size() > 0 &&
+      request.resource.data.office is string && request.resource.data.office.size() > 0 &&
+      request.resource.data.purpose is string && request.resource.data.purpose.size() > 0 &&
+      request.resource.data.status in ["checked-in", "checked-out"] &&
+      (!("address" in request.resource.data) || request.resource.data.address is string) &&
+      (!("contactNumber" in request.resource.data) || request.resource.data.contactNumber is string) &&
+      (!("email" in request.resource.data) || request.resource.data.email is string) &&
+      (!("staffName" in request.resource.data) || request.resource.data.staffName is string) &&
+      (!("comment" in request.resource.data) || request.resource.data.comment is string) &&
+      (!("rating" in request.resource.data) || isNumber(request.resource.data.rating)) &&
+      (!("autoCheckedOut" in request.resource.data) || request.resource.data.autoCheckedOut is bool) &&
+      (!("checkInSource" in request.resource.data) || request.resource.data.checkInSource in ["online", "offline"]);
+    }
+
+    function validVisitUpdate() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly([
+        "checkOutTime",
+        "status",
+        "autoCheckedOut",
+        "rating",
+        "comment",
+        "feedbackUpdatedAt"
+      ]) &&
+      (!("status" in request.resource.data) || request.resource.data.status in ["checked-in", "checked-out"]) &&
+      (!("autoCheckedOut" in request.resource.data) || request.resource.data.autoCheckedOut is bool) &&
+      (!("rating" in request.resource.data) || isNumber(request.resource.data.rating)) &&
+      (!("comment" in request.resource.data) || request.resource.data.comment is string);
+    }
+
+    function validFeedbackCreate() {
+      return request.resource.data.keys().hasOnly([
+        "visitId",
+        "name",
+        "answers",
+        "averageRating",
+        "rating",
+        "suggestion",
+        "commendation",
+        "comment",
+        "surveyDetails",
+        "createdAt"
+      ]) &&
+      request.resource.data.keys().hasAll(["visitId", "name", "answers"]) &&
+      request.resource.data.visitId is string && request.resource.data.visitId.size() > 0 &&
+      request.resource.data.name is string && request.resource.data.name.size() > 0 &&
+      request.resource.data.answers is map &&
+      request.resource.data.answers.keys().size() > 0 &&
+      (!("averageRating" in request.resource.data) || isNumber(request.resource.data.averageRating)) &&
+      (!("rating" in request.resource.data) || isNumber(request.resource.data.rating)) &&
+      (!("suggestion" in request.resource.data) || request.resource.data.suggestion is string) &&
+      (!("commendation" in request.resource.data) || request.resource.data.commendation is string) &&
+      (!("comment" in request.resource.data) || request.resource.data.comment is string) &&
+      (!("surveyDetails" in request.resource.data) || request.resource.data.surveyDetails is map);
+    }
+
+    match /offices/{officeId} {
+      allow get, list: if true;
+      allow create: if isSuper() && noLegacyPasswordFieldWrite() && noCredentialFieldWrite();
+      allow update: if (
+        isSuper() &&
+        noLegacyPasswordFieldWrite() &&
+        noCredentialFieldWrite()
+      ) || ownOfficeAllowedUpdate(officeId);
+      allow delete: if isSuper() && resource.data.role != "super";
+    }
+
+    match /visits/{visitId} {
+      allow get, list: if true;
+      allow create: if validVisitCreate();
+      allow update: if validVisitUpdate();
+      allow delete: if isSuper();
+    }
+
+    match /feedbacks/{feedbackId} {
+      allow create: if validFeedbackCreate();
+      allow get, list: if signedIn();
+      allow update, delete: if isSuper();
+    }
+
+    match /activityLogs/{logId} {
+      allow get, list: if signedIn();
+      allow create: if signedIn();
+      allow update, delete: if false;
+    }
+
+    match /passwordResetTokens/{tokenId} {
+      allow read, write: if false;
+    }
+
+    match /passwordResetRequests/{requestId} {
+      allow read, write: if false;
+    }
+
+    match /adminNotifications/{notificationId} {
+      allow get, list: if isSuper();
+      allow create, update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

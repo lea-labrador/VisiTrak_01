@@ -1,10 +1,30 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef, useCallback } from "react";
 import { View, Text, Modal, Pressable, useWindowDimensions, Alert } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import SectionTitle from "./SectionTitle";
 import SelectField from "./SelectField";
 import InputField from "./InputField";
-import { fetchOfficesWithMeta } from "../lib/info.services";
+import { fetchOfficesWithMeta, subscribeToOffices } from "../lib/info.services";
+
+const normalizeStaffLabel = (value) =>
+  String(value || "")
+    .trim()
+    .replace(/\s+/g, " ");
+
+const normalizeStaffKey = (value) => normalizeStaffLabel(value).toLowerCase();
+
+const dedupeStaffNames = (names = []) => {
+  const nameMap = new Map();
+  names.forEach((name) => {
+    const label = normalizeStaffLabel(name);
+    if (!label) return;
+    const key = normalizeStaffKey(label);
+    if (!nameMap.has(key)) {
+      nameMap.set(key, label);
+    }
+  });
+  return Array.from(nameMap.values());
+};
 
 const VisitInfoSection = forwardRef(({
   purpose,
@@ -37,6 +57,7 @@ const VisitInfoSection = forwardRef(({
   const [filteredStaffOptions, setFilteredStaffOptions] = useState([]);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [allowRealtime, setAllowRealtime] = useState(true);
 
   // Refs
   const staffFieldRef = useRef(null);
@@ -46,6 +67,10 @@ const VisitInfoSection = forwardRef(({
   const { width } = useWindowDimensions();
   const scale = Math.min(Math.max(width / 400, 0.8), 1.8);
   const isPhone = width < 600;
+  const isPermissionDenied = (error) =>
+    error?.code === "permission-denied" ||
+    error?.code === "firestore/permission-denied" ||
+    /Missing or insufficient permissions/i.test(error?.message || "");
 
   // Font and icon scale multipliers (can be adjusted dynamically)
   const fontScale = 1.0; // Adjust this to change all font sizes (0.8 = smaller, 1.2 = larger)
@@ -91,85 +116,141 @@ const VisitInfoSection = forwardRef(({
       officeFieldRef.current?.focus?.();
     }
   }));
+
+  const applyVisitorOfficeData = useCallback((visitorOffices) => {
+    setOffices(visitorOffices);
+
+    const officeNames = Array.from(
+      new Set(
+        visitorOffices
+          .map((o) => o.name?.trim())
+          .filter((name) => name && name !== "")
+      )
+    );
+
+    const officeOptions = officeNames.length > 0 ? [...officeNames, "Other"] : ["Other"];
+    setAllOffices(officeOptions);
+    setFilteredOffices(officeOptions);
+
+    const purposeSet = new Set();
+    visitorOffices.forEach((entry) => {
+      if (Array.isArray(entry.purposes)) {
+        entry.purposes.forEach((p) => {
+          if (p?.name && p.name.trim() !== "") {
+            purposeSet.add(p.name);
+          }
+        });
+      }
+    });
+
+    const purposesArray = Array.from(purposeSet);
+    setAllPurposes(purposesArray);
+    setFilteredPurposes([...purposesArray, "Other"]);
+
+    let allStaffList = [];
+    const staffNameKeys = new Set();
+    visitorOffices.forEach((entry) => {
+      if (Array.isArray(entry.staffToVisit)) {
+        entry.staffToVisit.forEach((staff) => {
+          const normalizedKey = normalizeStaffKey(staff?.name);
+          if (!normalizedKey || staffNameKeys.has(normalizedKey)) {
+            return;
+          }
+          staffNameKeys.add(normalizedKey);
+          if (staff?.name && staff.name.trim() !== "") {
+            allStaffList.push({
+              name: normalizeStaffLabel(staff.name),
+              office: entry.name,
+              purpose: staff.purpose || null,
+            });
+          }
+        });
+      }
+    });
+
+    setAllStaff(allStaffList);
+    setFilteredStaffOptions(dedupeStaffNames(allStaffList.map((s) => s.name)));
+
+    console.log(
+      `Loaded ${visitorOffices.length} visitor offices (excluding super admin)`
+    );
+    console.log(`${purposesArray.length} purposes available`);
+    console.log(`${allStaffList.length} staff members available`);
+  }, []);
+
+  const filterVisitorOffices = useCallback(
+    (officeItems = []) =>
+      officeItems.filter(
+        (entry) =>
+          entry.role !== "super" &&
+          entry.name &&
+          entry.name.trim() !== ""
+      ),
+    []
+  );
+
   // Fetch offices on component mount
   useEffect(() => {
-    const applyVisitorOfficeData = (visitorOffices) => {
-      setOffices(visitorOffices);
-
-      const officeNames = visitorOffices
-        .map((o) => o.name)
-        .filter((name) => name && name.trim() !== "");
-
-      setAllOffices([...officeNames, "Other"]);
-      setFilteredOffices([...officeNames, "Other"]);
-
-      const purposeSet = new Set();
-      visitorOffices.forEach((entry) => {
-        if (Array.isArray(entry.purposes)) {
-          entry.purposes.forEach((p) => {
-            if (p?.name && p.name.trim() !== "") {
-              purposeSet.add(p.name);
-            }
-          });
-        }
-      });
-
-      const purposesArray = Array.from(purposeSet);
-      setAllPurposes(purposesArray);
-      setFilteredPurposes([...purposesArray, "Other"]);
-
-      let allStaffList = [];
-      visitorOffices.forEach((entry) => {
-        if (Array.isArray(entry.staffToVisit)) {
-          entry.staffToVisit.forEach((staff) => {
-            if (staff?.name && staff.name.trim() !== "") {
-              allStaffList.push({
-                name: staff.name,
-                office: entry.name,
-                purpose: staff.purpose || null,
-              });
-            }
-          });
-        }
-      });
-
-      setAllStaff(allStaffList);
-      setFilteredStaffOptions(allStaffList.map((s) => s.name));
-
-      console.log(
-        `Loaded ${visitorOffices.length} visitor offices (excluding super admin)`
-      );
-      console.log(`${purposesArray.length} purposes available`);
-      console.log(`${allStaffList.length} staff members available`);
-    };
-
     const loadOffices = async () => {
       try {
         setIsLoading(true);
         const officeResult = await fetchOfficesWithMeta();
-
-        let visitorOffices = officeResult.items.filter(
-          (entry) =>
-            entry.role !== "super" &&
-            entry.name &&
-            entry.name.trim() !== ""
+        console.log(
+          `VisitInfo offices source=${officeResult?.source || "unknown"} reason=${officeResult?.reason || "unknown"} count=${officeResult?.items?.length || 0}`
         );
-
+        const visitorOffices = filterVisitorOffices(officeResult.items);
         applyVisitorOfficeData(visitorOffices);
+        if (officeResult?.permissionDenied) {
+          setAllowRealtime(false);
+        }
       } catch (error) {
-        console.error("Error fetching offices:", error);
+        if (!isPermissionDenied(error)) {
+          console.error("Error fetching offices:", error);
+        } else {
+          setAllowRealtime(false);
+        }
         applyVisitorOfficeData([]);
-        Alert.alert(
-          "Info",
-          "Could not load office and instructor data."
-        );
+        if (!isPermissionDenied(error)) {
+          Alert.alert(
+            "Info",
+            "Could not load office and instructor data."
+          );
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     loadOffices();
-  }, []);
+  }, [applyVisitorOfficeData, filterVisitorOffices]);
+
+  // Keep office/purpose/staff dropdowns updated in real-time.
+  useEffect(() => {
+    if (!allowRealtime) {
+      return undefined;
+    }
+
+    const unsubscribe = subscribeToOffices(
+      (liveOffices) => {
+        const visitorOffices = filterVisitorOffices(liveOffices);
+        applyVisitorOfficeData(visitorOffices);
+        setIsLoading(false);
+      },
+      (error) => {
+        if (isPermissionDenied(error)) {
+          setAllowRealtime(false);
+          return;
+        }
+        console.error("Error subscribing to offices:", error);
+      }
+    );
+
+    return () => {
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
+    };
+  }, [allowRealtime, applyVisitorOfficeData, filterVisitorOffices]);
 
   // Build purpose-to-office mapping (only for visitor offices)
   const getPurposeToOfficeMap = () => {
@@ -222,7 +303,9 @@ const VisitInfoSection = forwardRef(({
   useEffect(() => {
     if (firstFilled === "staff" && staffName) {
       // Find the staff member
-      const selectedStaff = allStaff.find(s => s.name === staffName);
+      const selectedStaff = allStaff.find(
+        (s) => normalizeStaffKey(s.name) === normalizeStaffKey(staffName)
+      );
       if (selectedStaff) {
         setOffice(selectedStaff.office);
         
@@ -235,15 +318,23 @@ const VisitInfoSection = forwardRef(({
         setFilteredOffices([selectedStaff.office]);
         
         // Filter staff options to only staff from this office
-        const staffFromOffice = allStaff
-          .filter(s => s.office === selectedStaff.office)
-          .map(s => s.name);
+        const staffFromOffice = dedupeStaffNames(
+          allStaff
+            .filter((s) => s.office === selectedStaff.office)
+            .map((s) => s.name)
+        );
         setFilteredStaffOptions(staffFromOffice);
         
         setTimeout(() => purposeFieldRef.current?.focus?.(), 300);
       }
     }
-  }, [staffName, firstFilled, allStaff]);
+  }, [
+    staffName,
+    firstFilled,
+    allStaff,
+    offices,
+    allPurposes,
+  ]);
 
   // Handle when purpose is selected first
   useEffect(() => {
@@ -264,15 +355,17 @@ const VisitInfoSection = forwardRef(({
         }
         
         // Filter staff to only those from offices that offer this purpose
-        const staffForPurpose = allStaff
-          .filter(s => officesForPurpose.includes(s.office))
-          .map(s => s.name);
+        const staffForPurpose = dedupeStaffNames(
+          allStaff
+            .filter((s) => officesForPurpose.includes(s.office))
+            .map((s) => s.name)
+        );
         setFilteredStaffOptions(staffForPurpose);
         
       } else {
         // If no offices found for this purpose, show all visitor offices
         setFilteredOffices(allOffices);
-        setFilteredStaffOptions(allStaff.map(s => s.name));
+        setFilteredStaffOptions(dedupeStaffNames(allStaff.map((s) => s.name)));
       }
       
       // Reset office if it's not in the filtered list
@@ -280,7 +373,15 @@ const VisitInfoSection = forwardRef(({
         setOffice("");
       }
     }
-  }, [purpose, firstFilled, office]);
+  }, [
+    purpose,
+    firstFilled,
+    office,
+    offices,
+    allStaff,
+    allOffices,
+    onCustomOfficeSubmit,
+  ]);
 
   // Handle when office is selected first
   useEffect(() => {
@@ -292,9 +393,9 @@ const VisitInfoSection = forwardRef(({
       setFilteredPurposes([...purposesForOffice, "Other"]);
       
       // Filter staff to only those from this office
-      const staffForOffice = allStaff
-        .filter(s => s.office === office)
-        .map(s => s.name);
+      const staffForOffice = dedupeStaffNames(
+        allStaff.filter((s) => s.office === office).map((s) => s.name)
+      );
       setFilteredStaffOptions(staffForOffice);
       
       // Reset purpose if it's not in the filtered list
@@ -304,7 +405,7 @@ const VisitInfoSection = forwardRef(({
       
       setTimeout(() => purposeFieldRef.current?.focus?.(), 300);
     }
-  }, [office, firstFilled, purpose]);
+  }, [office, firstFilled, purpose, offices, allStaff, allPurposes]);
 
   // Reset to default when nothing is selected
   useEffect(() => {
@@ -312,7 +413,7 @@ const VisitInfoSection = forwardRef(({
       setFirstFilled(null);
       setFilteredOffices(allOffices);
       setFilteredPurposes([...allPurposes, "Other"]);
-      setFilteredStaffOptions(allStaff.map(s => s.name));
+      setFilteredStaffOptions(dedupeStaffNames(allStaff.map((s) => s.name)));
     }
   }, [staffName, purpose, office, allOffices, allPurposes, allStaff]);
 
@@ -325,13 +426,37 @@ const VisitInfoSection = forwardRef(({
     }
   }, [staffName, purpose, office]);
 
+  useEffect(() => {
+    if (errors?.customOffice && office === "Other") {
+      setTimeout(() => customOfficeRef?.current?.focus?.(), 200);
+      return;
+    }
+
+    if (errors?.customPurpose && purpose === "Other") {
+      setTimeout(() => customPurposeRef?.current?.focus?.(), 200);
+    }
+  }, [
+    errors?.customOffice,
+    errors?.customPurpose,
+    office,
+    purpose,
+    customOfficeRef,
+    customPurposeRef,
+  ]);
+
   const handleReset = () => {
     setPurpose("");
     setOffice("");
     setCustomPurpose("");
     setCustomOffice("");
     setStaffName("");
-    setErrors(prev => ({ ...prev, purpose: false, office: false }));
+    setErrors((prev) => ({
+      ...prev,
+      purpose: false,
+      office: false,
+      customOffice: false,
+      customPurpose: false,
+    }));
     setShowResetConfirm(false);
     setFirstFilled(null);
   };
@@ -362,12 +487,69 @@ const VisitInfoSection = forwardRef(({
     }
   };
 
+  const handleCustomOfficeChange = (value) => {
+    setCustomOffice(value);
+    if (errors?.customOffice) {
+      setErrors((prev) => ({ ...prev, customOffice: false }));
+    }
+  };
+
+  const handleCustomPurposeChange = (value) => {
+    setCustomPurpose(value);
+    if (errors?.customPurpose) {
+      setErrors((prev) => ({ ...prev, customPurpose: false }));
+    }
+  };
+
   const handleStaffChange = (value) => {
     setStaffName(value);
     if (!firstFilled && value) setFirstFilled("staff");
   };
 
-  const isOfficeDisabled = firstFilled === "staff" && !!staffName;
+  const sanitizeOptions = (options = []) =>
+    Array.from(
+      new Set(
+        options
+          .map((item) => String(item || "").trim())
+          .filter((item) => item.length > 0)
+      )
+    );
+
+  const sanitizeStaffOptions = (options = []) => dedupeStaffNames(options);
+
+  const officeOptions = (() => {
+    const primary = sanitizeOptions(filteredOffices);
+    if (primary.length > 0) return primary;
+
+    const fallback = sanitizeOptions(allOffices);
+    if (fallback.length > 0) return fallback;
+
+    return ["Other"];
+  })();
+
+  const purposeOptions = (() => {
+    const filtered = sanitizeOptions(filteredPurposes.filter((item) => item !== "Other"));
+    if (filtered.length > 0) return [...filtered, "Other"];
+
+    const fallback = sanitizeOptions(allPurposes);
+    if (fallback.length > 0) return [...fallback, "Other"];
+
+    return ["Other"];
+  })();
+
+  const staffOptions = (() => {
+    const primary = sanitizeStaffOptions(filteredStaffOptions);
+    if (primary.length > 0) return primary;
+    return sanitizeStaffOptions(allStaff.map((staff) => staff.name));
+  })();
+
+  const hasValidSelectedStaff = Boolean(
+    staffName &&
+      allStaff.some(
+        (staff) => normalizeStaffKey(staff.name) === normalizeStaffKey(staffName)
+      )
+  );
+  const isOfficeDisabled = firstFilled === "staff" && hasValidSelectedStaff;
 
   // Show loading indicator
   if (isLoading) {
@@ -414,7 +596,7 @@ const VisitInfoSection = forwardRef(({
           selectedValue={staffName}
           onValueChange={handleStaffChange}
           placeholder="Staff / Instructor to Visit (optional)"
-          options={filteredStaffOptions}
+          options={staffOptions}
           scale={scale}
           fontSize={sizes.fieldTextSize}
         />
@@ -427,7 +609,7 @@ const VisitInfoSection = forwardRef(({
             selectedValue={office}
             onValueChange={handleOfficeChange}
             placeholder="Office to Visit"
-            options={filteredOffices}
+            options={officeOptions}
             scale={scale}
             hasError={errors.office}
             disabled={isOfficeDisabled}
@@ -441,13 +623,14 @@ const VisitInfoSection = forwardRef(({
             icon={<Ionicons name="business-outline" size={sizes.iconSize} color="#0a3aca"  />}
             placeholder="Please specify the office"
             value={customOffice}
-            onChangeText={setCustomOffice}
+            onChangeText={handleCustomOfficeChange}
             uppercase
             scale={scale}
             ref={customOfficeRef}
             onSubmitEditing={() => purposeFieldRef.current?.focus?.()}
             returnKeyType="next"
             fontSize={sizes.fieldTextSize}
+            hasError={errors?.customOffice}
           />
         )}
 
@@ -459,7 +642,7 @@ const VisitInfoSection = forwardRef(({
             selectedValue={purpose}
             onValueChange={handlePurposeChange}
             placeholder="Purpose of Visit"
-            options={filteredPurposes}
+            options={purposeOptions}
             scale={scale}
             hasError={errors.purpose}
             fontSize={sizes.fieldTextSize}
@@ -472,13 +655,14 @@ const VisitInfoSection = forwardRef(({
             icon={<Ionicons name="create-outline" size={sizes.iconSize} color="#0a3aca" />}
             placeholder="Please specify your purpose"
             value={customPurpose}
-            onChangeText={setCustomPurpose}
+            onChangeText={handleCustomPurposeChange}
             uppercase
             scale={scale}
             ref={customPurposeRef}
             onSubmitEditing={onCustomPurposeSubmit}
             returnKeyType="next"
             fontSize={sizes.fieldTextSize}
+            hasError={errors?.customPurpose}
           />
         )}
 

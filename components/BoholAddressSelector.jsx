@@ -257,7 +257,7 @@ const BoholAddressSelector = forwardRef(({
   };
 
   return (
-    <View style={{ marginTop: sizes.containerPadding }}>
+    <View>
       {/* Municipality Section */}
       <Pressable
         onPress={() => {
@@ -318,7 +318,11 @@ const BoholAddressSelector = forwardRef(({
             paddingVertical: isSingleMunicipality ? 6 * scale : 0,
           }}
         >
-          <ScrollView nestedScrollEnabled>
+          <ScrollView
+            nestedScrollEnabled
+            keyboardShouldPersistTaps="always"
+            keyboardDismissMode="none"
+          >
             {filteredMunicipalities.map((mun, idx) => (
               <Pressable
                 key={mun}
@@ -403,7 +407,11 @@ const BoholAddressSelector = forwardRef(({
                 paddingVertical: isSingleBarangay ? 6 * scale : 0,
               }}
             >
-              <ScrollView nestedScrollEnabled>
+              <ScrollView
+                nestedScrollEnabled
+                keyboardShouldPersistTaps="always"
+                keyboardDismissMode="none"
+              >
                 {filteredBarangays.map((brgy, idx) => (
                   <Pressable
                     key={brgy}
