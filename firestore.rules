@@ -100,6 +100,8 @@ service cloud.firestore {
       return request.resource.data.keys().hasOnly([
         "visitId",
         "name",
+        "displayName",
+        "showNameToAdmin",
         "answers",
         "averageRating",
         "rating",
@@ -112,6 +114,8 @@ service cloud.firestore {
       request.resource.data.keys().hasAll(["visitId", "name", "answers"]) &&
       request.resource.data.visitId is string && request.resource.data.visitId.size() > 0 &&
       request.resource.data.name is string && request.resource.data.name.size() > 0 &&
+      (!("displayName" in request.resource.data) || request.resource.data.displayName is string) &&
+      (!("showNameToAdmin" in request.resource.data) || request.resource.data.showNameToAdmin is bool) &&
       request.resource.data.answers is map &&
       request.resource.data.answers.keys().size() > 0 &&
       (!("averageRating" in request.resource.data) || isNumber(request.resource.data.averageRating)) &&

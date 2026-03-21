@@ -44,6 +44,7 @@ const sizes = {
 
 export default function ExitScreen() {
   const [name, setName] = useState("");   
+  const [showNameToAdmin, setShowNameToAdmin] = useState(true);
   const [focused, setFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -195,6 +196,58 @@ export default function ExitScreen() {
                     />
                   </View>
 
+                  <Pressable
+                    onPress={() => setShowNameToAdmin((current) => !current)}
+                    disabled={loading}
+                    style={{
+                      marginTop: 14 * scale,
+                      borderWidth: 1,
+                      borderColor: "#c084fc",
+                      borderRadius: 14 * scale,
+                      backgroundColor: "rgba(255,255,255,0.12)",
+                      paddingVertical: 12 * scale,
+                      paddingHorizontal: 12 * scale,
+                      opacity: loading ? 0.7 : 1,
+                    }}
+                  >
+                    <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+                      <View
+                        style={{
+                          width: 18 * scale,
+                          height: 18 * scale,
+                          borderRadius: 4 * scale,
+                          borderWidth: 1.4,
+                          borderColor: showNameToAdmin ? "#fb923c" : "#f8fafc",
+                          backgroundColor: showNameToAdmin ? "#fb923c" : "transparent",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          marginTop: 1 * scale,
+                        }}
+                      >
+                        {showNameToAdmin ? (
+                          <AntDesign name="check" size={11 * scale} color="#ffffff" />
+                        ) : null}
+                      </View>
+
+                      <View style={{ flex: 1, marginLeft: 10 * scale }}>
+                        <Text
+                          className="text-white font-semibold"
+                          style={{ fontSize: sizes.inputFont - 1 }}
+                        >
+                          Show my name to the admin with my feedback
+                        </Text>
+                        <Text
+                          className="text-white/80 mt-1"
+                          style={{ fontSize: sizes.subtitleFont + 0.5 }}
+                        >
+                          {showNameToAdmin
+                            ? "Your feedback will include your name."
+                            : "Your feedback will appear as Anonymous."}
+                        </Text>
+                      </View>
+                    </View>
+                  </Pressable>
+
                   {/* Error Message */}
                   {errorMessage ? (
                     <View
@@ -277,6 +330,7 @@ export default function ExitScreen() {
           onClose={() => setShowSuccess(false)}
           visitId={visitId}
           visitorName={visitorName}
+          showNameToAdmin={showNameToAdmin}
         />
 
         <Modal

@@ -32,7 +32,13 @@ const sizes = {
   secondaryBorder: 3 * scale,
 };
 
-export default function SuccessModal({ visible, onClose, visitId, visitorName }) {
+export default function SuccessModal({
+  visible,
+  onClose,
+  visitId,
+  visitorName,
+  showNameToAdmin = true,
+}) {
   const router = useRouter();
 
   return (
@@ -70,7 +76,11 @@ export default function SuccessModal({ visible, onClose, visitId, visitorName })
               // Pass visitId and visitorName as query params
               router.push({
                 pathname: "/FeedbackForm",
-                params: { visitId, visitorName },
+                params: {
+                  visitId,
+                  visitorName,
+                  showNameToAdmin: showNameToAdmin ? "true" : "false",
+                },
               });
             }}
             className="bg-purple-600 w-full items-center justify-center mb-6 active:opacity-90"

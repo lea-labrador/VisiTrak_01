@@ -22,10 +22,6 @@ import Question from "../components/Question";
 import EmojiRating from "../components/EmojiRating";
 
 import { addFeedback } from "../lib/feedbacks.service";
-import {
-  fetchOfficesWithMeta,
-  subscribeToOffices,
-} from "../lib/info.services";
 import { getVisitById } from "../lib/visits.service";
 
 const ratingQuestions = [
@@ -85,32 +81,22 @@ const citizensCharterQuestions = [
   },
 ];
 
-const normalizeOfficeName = (value) => String(value || "").trim().toLowerCase();
+const readSingleParam = (value) => (Array.isArray(value) ? value[0] : value);
 
-const findOfficeMatch = (options, target) => {
-  const normalizedTarget = normalizeOfficeName(target);
-  if (!normalizedTarget) return "";
-  return (
-    (options || []).find(
-      (option) => normalizeOfficeName(option) === normalizedTarget
-    ) || ""
-  );
-};
-
-const ensurePreferredOffice = (options, preferredOffice) => {
-  if (!preferredOffice) {
-    return { options, preferredMatch: "" };
+const parseBooleanParam = (value, fallbackValue = true) => {
+  const resolvedValue = readSingleParam(value);
+  if (resolvedValue === undefined || resolvedValue === null || resolvedValue === "") {
+    return fallbackValue;
   }
 
-  const existingMatch = findOfficeMatch(options, preferredOffice);
-  if (existingMatch) {
-    return { options, preferredMatch: existingMatch };
+  if (typeof resolvedValue === "boolean") {
+    return resolvedValue;
   }
 
-  return {
-    options: [preferredOffice, ...(options || [])],
-    preferredMatch: preferredOffice,
-  };
+  const normalizedValue = String(resolvedValue).trim().toLowerCase();
+  if (["false", "0", "no"].includes(normalizedValue)) return false;
+  if (["true", "1", "yes"].includes(normalizedValue)) return true;
+  return fallbackValue;
 };
 
 export default function FeedbackForm() {
@@ -119,11 +105,13 @@ export default function FeedbackForm() {
   const { width } = useWindowDimensions();
   const scrollRef = useRef(null);
   const questionRefs = useRef({});
-  const visitOfficeRef = useRef("");
-  const officeTouchedRef = useRef(false);
 
-  const visitId = params.visitId ? String(params.visitId) : "";
-  const visitorName = params.visitorName ? String(params.visitorName) : "";
+  const visitIdParam = readSingleParam(params.visitId);
+  const visitorNameParam = readSingleParam(params.visitorName);
+  const showNameToAdminParam = parseBooleanParam(params.showNameToAdmin, true);
+
+  const visitId = visitIdParam ? String(visitIdParam) : "";
+  const visitorName = visitorNameParam ? String(visitorNameParam) : "";
 
   const scale = Math.min(Math.max(width / 400, 0.85), 1.3);
 
@@ -158,85 +146,13 @@ export default function FeedbackForm() {
   const [servicesAvailed, setServicesAvailed] = useState("");
   const [servicedBy, setServicedBy] = useState("");
   const [ccResponses, setCcResponses] = useState({ cc1: "", cc2: "", cc3: "" });
-  const [officeOptions, setOfficeOptions] = useState([]);
-  const [officeLoadError, setOfficeLoadError] = useState("");
+  const [loadingVisitOffice, setLoadingVisitOffice] = useState(false);
+  const [visitOfficeError, setVisitOfficeError] = useState("");
+  const [showNameToAdmin, setShowNameToAdmin] = useState(showNameToAdminParam);
 
   useEffect(() => {
-    let mounted = true;
-
-    const applyOfficeOptions = (offices = []) => {
-      if (!mounted) return;
-
-      const officeNames = Array.from(
-        new Set(
-          (offices || [])
-            .filter((office) => office?.role !== "super" && office?.name?.trim())
-            .map((office) => office.name.trim())
-        )
-      );
-
-      const baseOptions = officeNames.length > 0 ? officeNames : ["Other"];
-      const preferredOffice = visitOfficeRef.current;
-      const { options: nextOptions, preferredMatch } = ensurePreferredOffice(
-        baseOptions,
-        preferredOffice
-      );
-
-      setOfficeOptions(nextOptions);
-
-      setOfficeVisited((current) => {
-        const currentMatch = findOfficeMatch(nextOptions, current);
-        if (currentMatch) return currentMatch;
-        if (!officeTouchedRef.current && preferredMatch) return preferredMatch;
-        if (preferredMatch) return preferredMatch;
-        return nextOptions[0] || "";
-      });
-    };
-
-    const loadOfficeOptions = async () => {
-      try {
-        const officeResult = await fetchOfficesWithMeta();
-        if (!mounted) return;
-
-        console.log(
-          `Feedback offices source=${officeResult?.source || "unknown"} reason=${officeResult?.reason || "unknown"} count=${officeResult?.items?.length || 0}`
-        );
-
-        applyOfficeOptions(officeResult?.items || []);
-
-        if (officeResult?.permissionDenied) {
-          setOfficeLoadError(
-            "Office list access was denied. Showing fallback options."
-          );
-        } else {
-          setOfficeLoadError("");
-        }
-      } catch (loadError) {
-        if (!mounted) return;
-        console.error("Failed to load office options:", loadError);
-        applyOfficeOptions([]);
-        setOfficeLoadError("Failed to load office list.");
-      }
-    };
-
-    loadOfficeOptions();
-
-    const unsubscribe = subscribeToOffices(
-      (liveOffices) => {
-        applyOfficeOptions(liveOffices);
-      },
-      (subscribeError) => {
-        console.error("Feedback office subscription failed:", subscribeError);
-      }
-    );
-
-    return () => {
-      mounted = false;
-      if (typeof unsubscribe === "function") {
-        unsubscribe();
-      }
-    };
-  }, []);
+    setShowNameToAdmin(showNameToAdminParam);
+  }, [showNameToAdminParam]);
 
   useEffect(() => {
     let mounted = true;
@@ -244,27 +160,36 @@ export default function FeedbackForm() {
     const loadVisitOffice = async () => {
       if (!visitId) return;
 
+      if (mounted) {
+        setLoadingVisitOffice(true);
+        setVisitOfficeError("");
+      }
+
       try {
         const visit = await getVisitById(visitId);
         if (!mounted) return;
 
         const officeName = String(visit?.office || "").trim();
-        if (!officeName) return;
 
-        visitOfficeRef.current = officeName;
+        setOfficeVisited(officeName);
+        setValidationErrors((prev) =>
+          prev.officeVisited ? { ...prev, officeVisited: false } : prev
+        );
 
-        setOfficeOptions((currentOptions) => {
-          const { options: nextOptions, preferredMatch } = ensurePreferredOffice(
-            currentOptions,
-            officeName
+        if (!officeName) {
+          setVisitOfficeError(
+            "The checked-in office for this visit could not be found."
           );
-          if (preferredMatch && !officeTouchedRef.current) {
-            setOfficeVisited(preferredMatch);
-          }
-          return nextOptions;
-        });
+        }
       } catch (loadError) {
         console.error("Failed to load visit details:", loadError);
+        if (!mounted) return;
+        setOfficeVisited("");
+        setVisitOfficeError("Failed to load the checked-in office for this visit.");
+      } finally {
+        if (mounted) {
+          setLoadingVisitOffice(false);
+        }
       }
     };
 
@@ -334,8 +259,11 @@ export default function FeedbackForm() {
     setValidationErrors(nonRatingValidation);
 
     if (Object.values(nonRatingValidation).some(Boolean)) {
+      const officeMessage = nonRatingValidation.officeVisited
+        ? " The checked-in office for this visit is missing."
+        : "";
       setError(
-        "Please complete all required fields in Client Type, Sex, Region/Office, and CC questions."
+        `Please complete all required fields in Client Type, Sex, Region, and CC questions.${officeMessage}`
       );
       scrollRef.current?.scrollTo({ y: 0, animated: true });
       setSubmitting(false);
@@ -375,9 +303,13 @@ export default function FeedbackForm() {
         sanitizedAnswers[key.toString()] = Number(answers[key]);
       });
 
+      const displayName = showNameToAdmin ? visitorName : "Anonymous";
+
       const feedbackObject = {
         visitId,
         name: visitorName,
+        displayName,
+        showNameToAdmin,
         answers: sanitizedAnswers,
         suggestion: suggestion.trim(),
         commendation: commendation.trim(),
@@ -436,6 +368,57 @@ export default function FeedbackForm() {
                 VISITOR: {visitorName}
               </Text>
 
+              <View
+                style={{
+                  marginBottom: sizes.marginVertical,
+                  borderWidth: 1,
+                  borderColor: "#d8b4fe",
+                  borderRadius: 10 * scale,
+                  backgroundColor: "#faf5ff",
+                  paddingHorizontal: 12 * scale,
+                  paddingVertical: 10 * scale,
+                }}
+              >
+                <Pressable
+                  onPress={() => setShowNameToAdmin((current) => !current)}
+                  style={{ flexDirection: "row", alignItems: "flex-start" }}
+                >
+                  <View
+                    style={{
+                      width: 18 * scale,
+                      height: 18 * scale,
+                      borderRadius: 4 * scale,
+                      borderWidth: 1.2,
+                      borderColor: showNameToAdmin ? "#552b98" : "#707070",
+                      backgroundColor: showNameToAdmin ? "#552b98" : "#fff",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginTop: 1 * scale,
+                    }}
+                  >
+                    {showNameToAdmin ? <Feather name="check" size={11 * scale} color="#fff" /> : null}
+                  </View>
+
+                  <View style={{ flex: 1, marginLeft: 10 * scale }}>
+                    <Text style={{ fontSize: sizes.fontLabel, fontWeight: "700", color: "#1f1f1f" }}>
+                      Show my name to the admin with this feedback
+                    </Text>
+                    <Text
+                      style={{
+                        marginTop: 3 * scale,
+                        fontSize: sizes.statusText,
+                        color: "#5b426f",
+                        lineHeight: 18 * scale,
+                      }}
+                    >
+                      {showNameToAdmin
+                        ? `Admins will see ${visitorName}.`
+                        : "Admins will see Anonymous instead of your name."}
+                    </Text>
+                  </View>
+                </Pressable>
+              </View>
+
               {error ? (
                 <View style={{ borderWidth: 1, borderColor: "#f87171", backgroundColor: "#fef2f2", borderRadius: 8 * scale, paddingHorizontal: 10 * scale, paddingVertical: 8 * scale, marginBottom: sizes.marginVertical }}>
                   <Text style={{ color: "#b91c1c", fontSize: sizes.statusText }}>{error}</Text>
@@ -489,23 +472,16 @@ export default function FeedbackForm() {
 
               <View style={{ marginTop: 10 * scale }}>
                 <Text style={{ fontSize: sizes.fontLabel, fontWeight: "600", color: "#1f1f1f" }}>Unit / Office Visited</Text>
-                <View style={{ marginTop: 4 * scale, borderWidth: 1, borderColor: validationErrors.officeVisited ? "#ef4444" : "#707070", borderRadius: 8 * scale, overflow: "hidden", backgroundColor: validationErrors.officeVisited ? "#fff1f2" : "#fff" }}>
-                  <Picker
-                    selectedValue={officeVisited}
-                    onValueChange={(value) => {
-                      officeTouchedRef.current = true;
-                      clearValidationError("officeVisited");
-                      setOfficeVisited(value);
-                    }}
-                    style={{ height: 48 * scale, color: "#1f1f1f" }}
-                  >
-                    <Picker.Item label="Select office" value="" />
-                    {officeOptions.map((office) => <Picker.Item key={office} label={office} value={office} />)}
-                  </Picker>
+                <View style={{ marginTop: 4 * scale, borderWidth: 1, borderColor: validationErrors.officeVisited ? "#ef4444" : "#707070", borderRadius: 8 * scale, backgroundColor: validationErrors.officeVisited ? "#fff1f2" : "#fff", paddingHorizontal: 12 * scale, paddingVertical: 12 * scale, minHeight: 48 * scale, justifyContent: "center" }}>
+                  <Text style={{ color: officeVisited ? "#1f1f1f" : "#707070", fontSize: sizes.fontInput }}>
+                    {loadingVisitOffice
+                      ? "Loading checked-in office..."
+                      : officeVisited || "No checked-in office found for this visit."}
+                  </Text>
                 </View>
-                {officeLoadError ? (
+                {visitOfficeError ? (
                   <Text style={{ marginTop: 4 * scale, fontSize: sizes.statusText, color: "#b91c1c" }}>
-                    {officeLoadError}
+                    {visitOfficeError}
                   </Text>
                 ) : null}
               </View>
