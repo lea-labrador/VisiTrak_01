@@ -81,6 +81,12 @@ const citizensCharterQuestions = [
   },
 ];
 
+const CC_NOT_AWARE_VALUE = "4";
+const CC2_NA_VALUE = "5";
+const CC3_NA_VALUE = "4";
+const ccFollowUpQuestionIds = ["cc2", "cc3"];
+const isCcFollowUpQuestion = (questionId) => ccFollowUpQuestionIds.includes(questionId);
+
 const readSingleParam = (value) => (Array.isArray(value) ? value[0] : value);
 
 const parseBooleanParam = (value, fallbackValue = true) => {
@@ -218,13 +224,17 @@ export default function FeedbackForm() {
   };
 
   const handleCcOptionChange = (questionId, optionValue) => {
-    if (ccResponses.cc1 === "4" && (questionId === "cc2" || questionId === "cc3")) {
+    if (ccResponses.cc1 === CC_NOT_AWARE_VALUE && isCcFollowUpQuestion(questionId)) {
       return;
     }
 
     clearValidationError(questionId);
 
-    if (questionId === "cc1" && optionValue === "4" && ccResponses.cc1 !== "4") {
+    if (
+      questionId === "cc1" &&
+      optionValue === CC_NOT_AWARE_VALUE &&
+      ccResponses.cc1 !== CC_NOT_AWARE_VALUE
+    ) {
       clearValidationError("cc2");
       clearValidationError("cc3");
     }
@@ -233,13 +243,18 @@ export default function FeedbackForm() {
       const isTogglingOff = prev[questionId] === optionValue;
 
       if (questionId === "cc1") {
-        if (optionValue === "4") {
+        if (optionValue === CC_NOT_AWARE_VALUE) {
           if (isTogglingOff) return { ...prev, cc1: "", cc2: "", cc3: "" };
-          return { ...prev, cc1: "4", cc2: "5", cc3: "4" };
+          return {
+            ...prev,
+            cc1: CC_NOT_AWARE_VALUE,
+            cc2: CC2_NA_VALUE,
+            cc3: CC3_NA_VALUE,
+          };
         }
 
         const nextCc1 = isTogglingOff ? "" : optionValue;
-        if (prev.cc1 === "4") {
+        if (prev.cc1 === CC_NOT_AWARE_VALUE) {
           return { ...prev, cc1: nextCc1, cc2: "", cc3: "" };
         }
         return { ...prev, cc1: nextCc1 };
@@ -520,7 +535,9 @@ export default function FeedbackForm() {
                   <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
                     {question.options.map((option) => {
                       const selected = ccResponses[question.id] === option.value;
-                      const disabledByCc1 = ccResponses.cc1 === "4" && (question.id === "cc2" || question.id === "cc3");
+                      const disabledByCc1 =
+                        ccResponses.cc1 === CC_NOT_AWARE_VALUE &&
+                        isCcFollowUpQuestion(question.id);
                       return (
                         <Pressable key={option.value} disabled={disabledByCc1} onPress={() => handleCcOptionChange(question.id, option.value)} style={{ width: question.singleColumn ? "100%" : "50%", paddingRight: question.singleColumn ? 0 : 8 * scale, marginBottom: 6 * scale, flexDirection: "row", alignItems: "flex-start", opacity: disabledByCc1 && !selected ? 0.45 : 1 }}>
                           <View style={{ width: 16 * scale, height: 16 * scale, borderRadius: 3, borderWidth: 1, borderColor: selected ? "#552b98" : disabledByCc1 ? "#a3a3a3" : "#707070", backgroundColor: selected ? "#552b98" : "#fff", justifyContent: "center", alignItems: "center", marginTop: 1 }}>

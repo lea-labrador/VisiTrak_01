@@ -187,7 +187,7 @@ export default function PersonalInfoSection({
             icon={
               <Ionicons name="person-outline" size={sizes.inputIconSize} color="#0a3aca" />
             }
-            placeholder="Full Name (e.g., LEA SHEILA LABRADOR)"
+            placeholder="Full Name (e.g., MAYCELL MACEREN)"
             value={fullName}
             onChangeText={handleNameChange}
             uppercase

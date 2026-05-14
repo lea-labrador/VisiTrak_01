@@ -83,4 +83,4 @@ export default function RootLayout() {
       <Stack.Screen name="exit" options={{ headerShown: false }} />
     </Stack>
   );
-}
+} 
