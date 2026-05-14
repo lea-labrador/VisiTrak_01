@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { BackHandler, Platform } from "react-native";
+import { Alert, BackHandler, Platform } from "react-native";
 import { Stack, usePathname, useRouter } from "expo-router";
 import "@/global.css";
 import { useOfflineSync } from "../hooks/useOfflineSync";
@@ -22,12 +22,37 @@ const useForceBackToIndex = () => {
       const isIndex =
         !currentPath || currentPath === "/" || currentPath === "/index";
       if (isIndex) {
-        BackHandler.exitApp();
+        Alert.alert("Exit VisiTrak?", "Are you sure you want to exit?", [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Exit",
+            style: "destructive",
+            onPress: () => BackHandler.exitApp(),
+          },
+        ]);
         return true;
       }
 
-      pathnameRef.current = "/";
-      router.replace("/");
+      Alert.alert(
+        "Leave this page?",
+        "Are you sure you want to go back to the home screen?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Go Back",
+            onPress: () => {
+              pathnameRef.current = "/";
+              router.replace("/");
+            },
+          },
+        ]
+      );
       return true;
     };
 

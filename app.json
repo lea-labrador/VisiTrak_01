@@ -7,12 +7,14 @@
     "scheme": "visitrak",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "runtimeVersion": "1.0.0",
+    "runtimeVersion": {
+        "policy": "appVersion"
+      },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.lealabrador.visitrak",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false 
       }
     },
     "android": {
@@ -24,12 +26,10 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
-      ],
+     "permissions": [
+      "android.permission.CAMERA",
+      "android.permission.RECORD_AUDIO"
+    ],
       "package": "com.lea_l.visitrak"
     },
     "web": {
@@ -72,8 +72,9 @@
     },
     "owner": "lea_l",
     "updates": {
+      "url": "https://u.expo.dev/5f48d494-2df7-457f-a74c-b2ea46ca745c",
       "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/5f48d494-2df7-457f-a74c-b2ea46ca745c"
+      "checkAutomatically": "ON_LOAD"
     }
   }
 }

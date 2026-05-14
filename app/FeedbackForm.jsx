@@ -170,8 +170,12 @@ export default function FeedbackForm() {
         if (!mounted) return;
 
         const officeName = String(visit?.office || "").trim();
+        const purposeName = String(visit?.purpose || "").trim();
+        const staffMemberName = String(visit?.staffName || "").trim();
 
         setOfficeVisited(officeName);
+        setServicesAvailed((current) => current || purposeName);
+        setServicedBy((current) => current || staffMemberName);
         setValidationErrors((prev) =>
           prev.officeVisited ? { ...prev, officeVisited: false } : prev
         );
@@ -214,6 +218,10 @@ export default function FeedbackForm() {
   };
 
   const handleCcOptionChange = (questionId, optionValue) => {
+    if (ccResponses.cc1 === "4" && (questionId === "cc2" || questionId === "cc3")) {
+      return;
+    }
+
     clearValidationError(questionId);
 
     if (questionId === "cc1" && optionValue === "4" && ccResponses.cc1 !== "4") {
@@ -512,12 +520,13 @@ export default function FeedbackForm() {
                   <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
                     {question.options.map((option) => {
                       const selected = ccResponses[question.id] === option.value;
+                      const disabledByCc1 = ccResponses.cc1 === "4" && (question.id === "cc2" || question.id === "cc3");
                       return (
-                        <Pressable key={option.value} onPress={() => handleCcOptionChange(question.id, option.value)} style={{ width: question.singleColumn ? "100%" : "50%", paddingRight: question.singleColumn ? 0 : 8 * scale, marginBottom: 6 * scale, flexDirection: "row", alignItems: "flex-start" }}>
-                          <View style={{ width: 16 * scale, height: 16 * scale, borderRadius: 3, borderWidth: 1, borderColor: selected ? "#552b98" : "#707070", backgroundColor: selected ? "#552b98" : "#fff", justifyContent: "center", alignItems: "center", marginTop: 1 }}>
+                        <Pressable key={option.value} disabled={disabledByCc1} onPress={() => handleCcOptionChange(question.id, option.value)} style={{ width: question.singleColumn ? "100%" : "50%", paddingRight: question.singleColumn ? 0 : 8 * scale, marginBottom: 6 * scale, flexDirection: "row", alignItems: "flex-start", opacity: disabledByCc1 && !selected ? 0.45 : 1 }}>
+                          <View style={{ width: 16 * scale, height: 16 * scale, borderRadius: 3, borderWidth: 1, borderColor: selected ? "#552b98" : disabledByCc1 ? "#a3a3a3" : "#707070", backgroundColor: selected ? "#552b98" : "#fff", justifyContent: "center", alignItems: "center", marginTop: 1 }}>
                             {selected ? <Feather name="check" size={11 * scale} color="#fff" /> : null}
                           </View>
-                          <Text style={{ marginLeft: 6 * scale, flex: 1, fontSize: sizes.statusText, color: "#2f2f2f", lineHeight: 18 * scale }}>
+                          <Text style={{ marginLeft: 6 * scale, flex: 1, fontSize: sizes.statusText, color: disabledByCc1 && !selected ? "#737373" : "#2f2f2f", lineHeight: 18 * scale }}>
                             {option.label}
                             {option.note ? <Text style={{ fontStyle: "italic" }}> {option.note}</Text> : null}
                           </Text>

@@ -150,7 +150,7 @@ export default function TermsAgreement({
                 ["4. Staff Responsibilities", "Authorized users must enter accurate visitor details, maintain confidentiality, and use the app only for legitimate purposes."],
                 ["5. Limitation of Liability", "The developers of VisiTrak are not responsible for data loss, misuse, or unauthorized access beyond reasonable control. Use of this app implies acceptance of these terms."],
                 ["6. Updates to Terms", "These Terms may be updated periodically. Continued use after updates means you accept the revised version."],
-                ["7. Contact", "For questions or concerns, contact us at support@visitrak.app."],
+                ["7. Contact", "For questions or concerns, contact us at visitrak88gmail.com."],
               ].map(([title, content], idx) => (
                 <View key={idx}>
                   <Text
@@ -247,7 +247,7 @@ export default function TermsAgreement({
                 ["5. Data Retention", "Visitor records are retained only as long as necessary or as required by policy, after which they are securely deleted."],
                 ["6. User Rights", "Visitors may request access to or correction of their data through the managing organization."],
                 ["7. Policy Updates", "This Privacy Policy may be updated periodically. Continued use of the app means you accept the revised version."],
-                ["8. Contact Us", "For privacy concerns, contact privacy@visitrak.app."],
+                ["8. Contact Us", "For privacy concerns, contact visitrak8@gmail.com."],
               ].map(([title, content], idx) => (
                 <View key={idx}>
                   <Text

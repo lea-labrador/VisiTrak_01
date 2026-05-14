@@ -115,7 +115,7 @@ export default function PersonalInfoSection({
   };
 
   const handleOutsideAddressChange = (text) => {
-    setHomeAddress(text);
+    setHomeAddress(text.toUpperCase());
     if (errors?.homeAddress && setErrors) {
       setErrors((prev) => ({ ...prev, homeAddress: false }));
     }
@@ -187,7 +187,7 @@ export default function PersonalInfoSection({
             icon={
               <Ionicons name="person-outline" size={sizes.inputIconSize} color="#0a3aca" />
             }
-            placeholder="Full Name (e.g., first name and last name, middle name(optional)"
+            placeholder="Full Name (e.g., LEA SHEILA LABRADOR)"
             value={fullName}
             onChangeText={handleNameChange}
             uppercase
@@ -213,7 +213,7 @@ export default function PersonalInfoSection({
               fontWeight: "600",
             }}
           >
-            Outside Bohol?
+            OUTSIDE BOHOL?
           </Text>
           <Switch
             value={isOutsideBohol}
@@ -239,12 +239,12 @@ export default function PersonalInfoSection({
                   color="#0a3aca"
                 />
               }
-              placeholder="Complete Address (Outside Bohol)"
+              placeholder="Complete Address (OUTSIDE BOHOL)"
               value={homeAddress}
               onChangeText={handleOutsideAddressChange}
+              uppercase
               onSubmitEditing={onHomeAddressSubmit}
               returnKeyType="next"
-              autoCapitalize="words"
               scale={scale}
               hasError={errors?.homeAddress}
             />
