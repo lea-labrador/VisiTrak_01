@@ -1,5 +1,6 @@
-import { View, Text, Pressable, Modal, Image } from "react-native";
+import { View, Text, Modal, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import Pressable from "./SystemPressable";
 
 export default function MatchModal({ visible, onClose }) {
   const navigation = useNavigation();

@@ -2,13 +2,13 @@ import {
   View,
   Text,
   ImageBackground,
-  Pressable,
   Image,
   useWindowDimensions,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Pressable from "../components/SystemPressable";
 
 // Import images
 import backG1 from "../assets/images/BG009.png";
@@ -151,7 +151,7 @@ const HomeScreen = () => {
           className="absolute bottom-5 text-center text-gray-300 tracking-wide"
           style={{ fontSize: sizes.footerFont }}
         >
-          &copy; 2025 LMT. All rights reserved.
+          &copy; 2026 LMT. All rights reserved.
         </Text>
       </ImageBackground>
     </SafeAreaView>

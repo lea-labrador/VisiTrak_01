@@ -1,14 +1,43 @@
 import React from "react";
-import { View, Text, Modal, Pressable, Dimensions } from "react-native";
+import { View, Text, Modal, Dimensions } from "react-native";
+import Pressable from "./SystemPressable";
 
 const { width, height } = Dimensions.get("window");
 const scale = Math.min(Math.max(width / 400, 0.8), 1.8);
 const isPhone = width < 600;
 
-export default function DuplicateVisitModal({ visible, onClose, onProceed, visitorData }) {
-  const { name, office, purpose, checkInTime } = visitorData || {};
+const maskContact = (value) => {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (digits.length < 4) return value || "-";
+  return `${digits.slice(0, 2)}${"*".repeat(Math.max(0, digits.length - 5))}${digits.slice(-3)}`;
+};
 
-  // Precomputed dynamic sizes
+const maskEmail = (value) => {
+  const email = String(value || "").trim();
+  const [localPart, domain] = email.split("@");
+  if (!localPart || !domain) return email || "-";
+  const visible = localPart.slice(0, 2);
+  return `${visible}${"*".repeat(Math.max(2, localPart.length - 2))}@${domain}`;
+};
+
+export default function DuplicateVisitModal({
+  visible,
+  onClose,
+  onProceed,
+  visitorData,
+  variant = "duplicate",
+}) {
+  const {
+    name,
+    address,
+    contactNumber,
+    email,
+    office,
+    purpose,
+    checkInTime,
+  } = visitorData || {};
+  const isPossibleMatch = variant === "possible";
+
   const sizes = {
     modalPadding: 20 * scale,
     modalBorderRadius: 24 * scale,
@@ -22,7 +51,7 @@ export default function DuplicateVisitModal({ visible, onClose, onProceed, visit
     buttonMargin: 8 * scale,
     detailsPadding: 12 * scale,
     detailsBorderRadius: 12 * scale,
-    modalWidth: isPhone ? "90%" : 400 * scale, 
+    modalWidth: isPhone ? "90%" : 400 * scale,
   };
 
   const formatTime = (timestamp) => {
@@ -37,6 +66,21 @@ export default function DuplicateVisitModal({ visible, onClose, onProceed, visit
       minute: "2-digit",
     });
   };
+
+  const detailItems = isPossibleMatch
+    ? [
+        { label: "Matched Name", value: name },
+        { label: "Address", value: address },
+        { label: "Contact", value: maskContact(contactNumber) },
+        { label: "Email", value: maskEmail(email) },
+        { label: "Last Check-in", value: formatTime(checkInTime) },
+      ]
+    : [
+        { label: "Name", value: name },
+        { label: "Office", value: office },
+        { label: "Purpose", value: purpose },
+        { label: "Check-in Time", value: formatTime(checkInTime) },
+      ];
 
   return (
     <Modal transparent visible={visible} animationType="fade">
@@ -63,20 +107,18 @@ export default function DuplicateVisitModal({ visible, onClose, onProceed, visit
             elevation: 5,
           }}
         >
-          {/* Title */}
           <Text
             style={{
               fontSize: sizes.titleFont,
               fontWeight: "bold",
               textAlign: "center",
               marginBottom: sizes.modalPadding * 0.6,
-              color: "#DC2626",
+              color: isPossibleMatch ? "#4F46E5" : "#DC2626",
             }}
           >
-            Visitor Already Checked In
+            {isPossibleMatch ? "Possible Same Visitor" : "Visitor Already Checked In"}
           </Text>
 
-          {/* Visitor Details */}
           <View
             style={{
               backgroundColor: "#F3F4F6",
@@ -85,18 +127,13 @@ export default function DuplicateVisitModal({ visible, onClose, onProceed, visit
               marginBottom: sizes.modalPadding,
             }}
           >
-            {[
-              { label: "Name", value: name },
-              { label: "Office", value: office },
-              { label: "Purpose", value: purpose },
-              { label: "Check-in Time", value: formatTime(checkInTime) },
-            ].map((item, idx) => (
+            {detailItems.map((item, idx) => (
               <Text
-                key={idx}
+                key={item.label}
                 style={{
                   color: "#374151",
                   fontSize: sizes.visitorLabelFont,
-                  marginBottom: idx < 3 ? sizes.visitorMarginBottom : 0,
+                  marginBottom: idx < detailItems.length - 1 ? sizes.visitorMarginBottom : 0,
                 }}
               >
                 <Text style={{ fontWeight: "600" }}>{item.label}: </Text>
@@ -105,7 +142,6 @@ export default function DuplicateVisitModal({ visible, onClose, onProceed, visit
             ))}
           </View>
 
-          {/* Description */}
           <Text
             style={{
               textAlign: "center",
@@ -115,11 +151,11 @@ export default function DuplicateVisitModal({ visible, onClose, onProceed, visit
               lineHeight: sizes.descFont * 1.5,
             }}
           >
-            This visitor is still checked in from a previous visit today. Please
-            check out first before creating a new check-in.
+            {isPossibleMatch
+              ? "This name looks similar to a previous visitor. If this is you, use the saved address and contact details. Otherwise, continue as a different visitor."
+              : "This visitor is still checked in from a previous visit today. Please check out first before creating a new check-in."}
           </Text>
 
-          {/* Buttons */}
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
             <Pressable
               onPress={onClose}
@@ -140,7 +176,7 @@ export default function DuplicateVisitModal({ visible, onClose, onProceed, visit
                   fontSize: sizes.buttonFont,
                 }}
               >
-                Cancel
+                {isPossibleMatch ? "Different Visitor" : "Cancel"}
               </Text>
             </Pressable>
 
@@ -151,7 +187,7 @@ export default function DuplicateVisitModal({ visible, onClose, onProceed, visit
                 marginLeft: sizes.buttonMargin,
                 height: sizes.buttonHeight,
                 borderRadius: sizes.buttonRadius,
-                backgroundColor: "#F97316",
+                backgroundColor: isPossibleMatch ? "#4F46E5" : "#F97316",
                 alignItems: "center",
                 justifyContent: "center",
               }}
@@ -163,7 +199,7 @@ export default function DuplicateVisitModal({ visible, onClose, onProceed, visit
                   fontSize: sizes.buttonFont,
                 }}
               >
-                Go to Check Out
+                {isPossibleMatch ? "Use Details" : "Go to Check Out"}
               </Text>
             </Pressable>
           </View>

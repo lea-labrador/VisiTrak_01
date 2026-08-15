@@ -1,5 +1,6 @@
-import { View, Text, ImageBackground, TextInput, Pressable } from "react-native";
+import { View, Text, ImageBackground, TextInput } from "react-native";
 import { useState } from "react";
+import Pressable from "../components/SystemPressable";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "../components/Header";
 import Footer from "../components/Footer";

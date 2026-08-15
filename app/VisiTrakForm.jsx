@@ -22,7 +22,7 @@ import backG01 from "../assets/images/backG009.png";
 import backG02 from "../assets/images/backG004.png";
 import backG03 from "../assets/images/backG010.png";
 
-import { addVisit, checkActiveVisitByNameToday } from "../lib/visits.service";
+import { addVisit, checkActiveVisitByNameToday, findPossibleVisitorByName } from "../lib/visits.service";
 export default function VisiTrakForm() {
   const router = useRouter();
   const scrollRef = useRef(null);
@@ -54,13 +54,20 @@ export default function VisiTrakForm() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
+  const setUppercaseText = (setter) => (value) => {
+    setter(typeof value === "string" ? value.toUpperCase() : value);
+  };
+
   /* 🔹 DUPLICATE CHECK STATE */
   const [nameExistsToday, setNameExistsToday] = useState(false);
   const [checkingName, setCheckingName] = useState(false);
   const [duplicateVisitInfo, setDuplicateVisitInfo] = useState(null);
+  const [possibleVisitorInfo, setPossibleVisitorInfo] = useState(null);
+  const [ignoredPossibleMatchKey, setIgnoredPossibleMatchKey] = useState("");
 
   /* 🔹 MODAL STATE */
   const [duplicateModalVisible, setDuplicateModalVisible] = useState(false);
+  const [possibleMatchModalVisible, setPossibleMatchModalVisible] = useState(false);
 
   const images = [backG01, backG02, backG03];
 
@@ -92,6 +99,8 @@ export default function VisiTrakForm() {
       if (name.length < 3) {
         setNameExistsToday(false);
         setDuplicateVisitInfo(null);
+        setPossibleVisitorInfo(null);
+        setPossibleMatchModalVisible(false);
         return;
       }
 
@@ -107,6 +116,17 @@ export default function VisiTrakForm() {
         } else {
           setNameExistsToday(false);
           setDuplicateVisitInfo(null);
+          setErrors((prev) => ({ ...prev, fullName: false }));
+
+          const possibleVisit = await findPossibleVisitorByName(name);
+          const possibleMatchKey = possibleVisit?.id || possibleVisit?.name || "";
+          if (possibleVisit && possibleMatchKey !== ignoredPossibleMatchKey) {
+            setPossibleVisitorInfo(possibleVisit);
+            setPossibleMatchModalVisible(true);
+          } else if (!possibleVisit) {
+            setPossibleVisitorInfo(null);
+            setPossibleMatchModalVisible(false);
+          }
         }
       } catch (error) {
         console.error("❌ Name duplicate check error:", error);
@@ -116,8 +136,37 @@ export default function VisiTrakForm() {
     }, 500);
 
     return () => clearTimeout(handler);
-  }, [fullName]);
+  }, [fullName, ignoredPossibleMatchKey]);
 
+
+  const markPossibleMatchHandled = (visitInfo = possibleVisitorInfo) => {
+    const possibleMatchKey = visitInfo?.id || visitInfo?.name || "";
+    if (possibleMatchKey) {
+      setIgnoredPossibleMatchKey(possibleMatchKey);
+    }
+    setPossibleMatchModalVisible(false);
+  };
+
+  const handleUsePossibleVisitorDetails = () => {
+    if (!possibleVisitorInfo) return;
+
+    if (possibleVisitorInfo.address) {
+      setHomeAddress(String(possibleVisitorInfo.address).toUpperCase());
+    }
+    if (possibleVisitorInfo.contactNumber) {
+      setContactNumber(String(possibleVisitorInfo.contactNumber));
+    }
+    if (possibleVisitorInfo.email) {
+      setEmail(String(possibleVisitorInfo.email));
+    }
+
+    setErrors((prev) => ({
+      ...prev,
+      homeAddress: false,
+      contactNumber: false,
+    }));
+    markPossibleMatchHandled(possibleVisitorInfo);
+  };
   /* 🔹 SUBMIT */
   const onSubmit = async () => {
     if (submitting) return;
@@ -208,10 +257,10 @@ export default function VisiTrakForm() {
           >
             <PersonalInfoSection
               fullName={fullName}
-              setFullName={setFullName}
+              setFullName={setUppercaseText(setFullName)}
               fullNameRef={fullNameRef}
               homeAddress={homeAddress}
-              setHomeAddress={setHomeAddress}
+              setHomeAddress={setUppercaseText(setHomeAddress)}
               homeAddressRef={homeAddressRef}
               errors={errors}
               setErrors={setErrors}
@@ -234,9 +283,9 @@ export default function VisiTrakForm() {
               office={office}
               setOffice={setOffice}
               customOffice={customOffice}
-              setCustomOffice={setCustomOffice}
+              setCustomOffice={setUppercaseText(setCustomOffice)}
               customPurpose={customPurpose}
-              setCustomPurpose={setCustomPurpose}
+              setCustomPurpose={setUppercaseText(setCustomPurpose)}
               staffName={staffName}
               setStaffName={setStaffName}
               errors={errors}
@@ -300,6 +349,14 @@ export default function VisiTrakForm() {
             router.push("/ScanScreenOut"); // Navigate to check-out page
           }}
           visitorData={duplicateVisitInfo} // Pass visitor info
+        />
+
+        <DuplicateVisitModal
+          visible={possibleMatchModalVisible}
+          variant="possible"
+          onClose={() => markPossibleMatchHandled()}
+          onProceed={handleUsePossibleVisitorDetails}
+          visitorData={possibleVisitorInfo}
         />
       </KeyboardAvoidingView>
     </LinearGradient>

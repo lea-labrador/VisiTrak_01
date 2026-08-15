@@ -12,6 +12,7 @@ export default function ExitScreen() {
   const [keyCode, setKeyCode] = useState("");
   const router = useRouter();
 
+
   const handleScanned = (data) => {
     console.log("✅ User exit key:", data);
     router.push("/FeedbackForm");

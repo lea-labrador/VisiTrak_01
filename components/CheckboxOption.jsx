@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import Pressable from "./SystemPressable";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function CheckboxOption({ label, checked, onChange }) {

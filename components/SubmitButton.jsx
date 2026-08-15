@@ -1,5 +1,6 @@
 import React from "react";
-import { Pressable, Text, useWindowDimensions } from "react-native";
+import { Text, useWindowDimensions } from "react-native";
+import Pressable from "./SystemPressable";
 
 export default function SubmitButton({
   onPress,

@@ -3,7 +3,6 @@ import {
   Text,
   ImageBackground,
   Image,
-  Pressable,
   StatusBar,
   useWindowDimensions,
   SafeAreaView,
@@ -16,6 +15,7 @@ import Divider from "../components/Divider";
 import Logos from "../components/Logos";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import Pressable from "../components/SystemPressable";
 
 export default function EntryScreen() {
   const { width, height } = useWindowDimensions();

@@ -66,8 +66,11 @@ const useForceBackToIndex = () => {
 };
 
 export default function RootLayout() {
+  const pathname = usePathname();
+  const isIndex = !pathname || pathname === "/" || pathname === "/index";
+
   useOfflineSync();
-  useGlobalAutoCheckout();
+  useGlobalAutoCheckout(isIndex);
   useForceBackToIndex();
 
   return (

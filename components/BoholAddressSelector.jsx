@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, forwardRef, useImperativeHandle, useRef } from "react";
-import { View, Text, useWindowDimensions, TextInput, Pressable, ScrollView } from "react-native";
+import { View, Text, useWindowDimensions, TextInput, ScrollView } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
+import Pressable from "./SystemPressable";
 import { 
   loadBoholMunicipalitiesWithMeta,
   loadBoholBarangaysWithMeta,
@@ -178,21 +179,36 @@ const BoholAddressSelector = forwardRef(({
 
       if (onSubmitEditing) onSubmitEditing();
     } else {
-      setHomeAddress("");
+      if (!municipality.trim() && !barangay.trim()) {
+        setHomeAddress("");
+      }
       if (onAddressChange) onAddressChange(null);
     }
+  // Parent callbacks are inline; this effect intentionally tracks resolved selections only.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchedMunicipality, matchedBarangay]);
 
   useEffect(() => {
-    if (homeAddress && !municipality && !barangay) {
-      const parts = homeAddress.split(", ");
-      if (parts.length >= 2) {
-        const [brgy, mun] = parts;
-        setBarangay(brgy);
-        setMunicipality(mun);
-      }
+    if (!homeAddress) return;
+
+    const parts = String(homeAddress)
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean);
+    if (parts.length < 2) return;
+
+    const [brgy, mun] = parts;
+    if (!brgy || !mun) return;
+
+    const hasSameAddressParts =
+      barangay.trim().toLowerCase() === brgy.toLowerCase() &&
+      municipality.trim().toLowerCase() === mun.toLowerCase();
+
+    if (!hasSameAddressParts) {
+      setBarangay(brgy);
+      setMunicipality(mun);
     }
-  }, []);
+  }, [barangay, homeAddress, municipality]);
 
   const clearHomeAddressError = () => {
     if (setErrors && errors?.homeAddress) {
@@ -293,6 +309,7 @@ const BoholAddressSelector = forwardRef(({
           onBlur={() => setTimeout(() => setShowMunicipalityList(false), 120)}
           onSubmitEditing={handleMunicipalitySubmit}
           returnKeyType="next"
+          autoCapitalize="characters"
           autoCorrect={false}
           spellCheck={false}
           autoComplete="off"
@@ -382,6 +399,7 @@ const BoholAddressSelector = forwardRef(({
               onBlur={() => setTimeout(() => setShowBarangayList(false), 120)}
               onSubmitEditing={handleBarangaySubmit}
               returnKeyType="done"
+              autoCapitalize="characters"
               autoCorrect={false}
               spellCheck={false}
               autoComplete="off"

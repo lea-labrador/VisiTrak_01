@@ -1,7 +1,8 @@
 import React from "react";
-import { View, Text, Pressable, useWindowDimensions } from "react-native";
+import { View, Text, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import Pressable from "./SystemPressable";
 
 export default function Header({ title }) {
   const router = useRouter();

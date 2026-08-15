@@ -4,10 +4,10 @@ import {
   Text,
   Modal,
   ScrollView,
-  Pressable,
   useWindowDimensions,
 } from "react-native";
 import Checkbox from "expo-checkbox";
+import Pressable from "./SystemPressable";
 
 export default function TermsAgreement({
   agreeTerms,

@@ -1,15 +1,16 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
   TextInput,
+  Image,
   ScrollView,
-  Pressable,
   Modal,
   useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
   Alert,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -20,9 +21,14 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import Header from "../components/Satisfaction_header";
 import Question from "../components/Question";
 import EmojiRating from "../components/EmojiRating";
+import Pressable from "../components/SystemPressable";
 
 import { addFeedback } from "../lib/feedbacks.service";
 import { getVisitById } from "../lib/visits.service";
+
+const bisuLogo = require("../assets/images/bisu-logo.png");
+const bagongPilipinasLogo = require("../assets/images/bagong_pilipinas_logo.png");
+const tuvIsoLogo = require("../assets/images/tuvISO_logo.png");
 
 const ratingQuestions = [
   "Responsiveness (Pag abi-abi).",
@@ -37,6 +43,7 @@ const ratingQuestions = [
 
 const clientTypeOptions = ["Citizen", "Business", "Government"];
 const sexOptions = ["Male", "Female"];
+const DEFAULT_REGION = "VII";
 
 const regionOptions = [
   "NCR", "CAR", "I", "II", "III", "IV-A", "IV-B", "V", "VI",
@@ -84,10 +91,40 @@ const citizensCharterQuestions = [
 const CC_NOT_AWARE_VALUE = "4";
 const CC2_NA_VALUE = "5";
 const CC3_NA_VALUE = "4";
+const DEFAULT_DATE_OF_VISIT = "07/01/24";
 const ccFollowUpQuestionIds = ["cc2", "cc3"];
 const isCcFollowUpQuestion = (questionId) => ccFollowUpQuestionIds.includes(questionId);
 
 const readSingleParam = (value) => (Array.isArray(value) ? value[0] : value);
+
+const toDateInputValue = (dateValue) => {
+  if (!(dateValue instanceof Date) || Number.isNaN(dateValue.getTime())) {
+    return "";
+  }
+
+  const year = dateValue.getFullYear();
+  const month = String(dateValue.getMonth() + 1).padStart(2, "0");
+  const day = String(dateValue.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const toTimeInputValue = (dateValue) => {
+  if (!(dateValue instanceof Date) || Number.isNaN(dateValue.getTime())) {
+    return "";
+  }
+
+  const hours = String(dateValue.getHours()).padStart(2, "0");
+  const minutes = String(dateValue.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
+
+const getInitialVisitDateTime = () => {
+  const now = new Date();
+  return {
+    date: DEFAULT_DATE_OF_VISIT,
+    time: toTimeInputValue(now),
+  };
+};
 
 const parseBooleanParam = (value, fallbackValue = true) => {
   const resolvedValue = readSingleParam(value);
@@ -134,6 +171,10 @@ export default function FeedbackForm() {
     marginVertical: 12 * scale,
     minHeightInput: 120 * scale,
     statusText: 12 * scale,
+    headerLogo: 42 * scale,
+    headerTextSmall: 7 * scale,
+    headerTextMedium: 8.5 * scale,
+    headerTextLarge: 9 * scale,
   };
 
   const [answers, setAnswers] = useState({});
@@ -145,9 +186,12 @@ export default function FeedbackForm() {
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState({});
 
+  const [initialVisitDateTime] = useState(getInitialVisitDateTime);
   const [clientType, setClientType] = useState("");
   const [sex, setSex] = useState("");
-  const [region, setRegion] = useState("VII");
+  const [dateOfVisit, setDateOfVisit] = useState(initialVisitDateTime.date);
+  const [timeOfVisit, setTimeOfVisit] = useState(initialVisitDateTime.time);
+  const [region, setRegion] = useState(DEFAULT_REGION);
   const [officeVisited, setOfficeVisited] = useState("");
   const [servicesAvailed, setServicesAvailed] = useState("");
   const [servicedBy, setServicedBy] = useState("");
@@ -155,6 +199,34 @@ export default function FeedbackForm() {
   const [loadingVisitOffice, setLoadingVisitOffice] = useState(false);
   const [visitOfficeError, setVisitOfficeError] = useState("");
   const [showNameToAdmin, setShowNameToAdmin] = useState(showNameToAdminParam);
+  const showFeedbackExitPrompt = useCallback(() => {
+    Alert.alert(
+      "Complete Feedback?",
+      "You are already in the feedback form. Please answer and submit your feedback before leaving.",
+      [
+        {
+          text: "Continue Feedback",
+          style: "cancel",
+        },
+        {
+          text: "Leave Anyway",
+          style: "destructive",
+          onPress: () => router.replace("/"),
+        },
+      ]
+    );
+  }, [router]);
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return undefined;
+
+    const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      showFeedbackExitPrompt();
+      return true;
+    });
+
+    return () => subscription.remove();
+  }, [showFeedbackExitPrompt]);
 
   useEffect(() => {
     setShowNameToAdmin(showNameToAdminParam);
@@ -182,6 +254,10 @@ export default function FeedbackForm() {
         setOfficeVisited(officeName);
         setServicesAvailed((current) => current || purposeName);
         setServicedBy((current) => current || staffMemberName);
+        setDateOfVisit(toDateInputValue(visit?.checkInTime) || initialVisitDateTime.date);
+        setTimeOfVisit(
+          toTimeInputValue(visit?.checkOutTime) || initialVisitDateTime.time
+        );
         setValidationErrors((prev) =>
           prev.officeVisited ? { ...prev, officeVisited: false } : prev
         );
@@ -208,7 +284,7 @@ export default function FeedbackForm() {
     return () => {
       mounted = false;
     };
-  }, [visitId]);
+  }, [initialVisitDateTime.date, initialVisitDateTime.time, visitId]);
 
   const clearValidationError = (fieldName) => {
     setError("");
@@ -273,7 +349,7 @@ export default function FeedbackForm() {
     const nonRatingValidation = {
       clientType: !clientType,
       sex: !sex,
-      region: !region,
+      region: !(region || DEFAULT_REGION),
       officeVisited: !officeVisited,
       cc1: !ccResponses.cc1,
       cc2: !ccResponses.cc2,
@@ -339,7 +415,9 @@ export default function FeedbackForm() {
         surveyDetails: {
           clientType: clientType || null,
           sex: sex || null,
-          region: region || null,
+          dateOfVisit: dateOfVisit || null,
+          timeOfVisit: timeOfVisit || null,
+          region: region || DEFAULT_REGION,
           unitOfficeVisited: officeVisited || null,
           servicesAvailed: servicesAvailed.trim(),
           servicedBy: servicedBy.trim(),
@@ -378,11 +456,60 @@ export default function FeedbackForm() {
   return (
     <LinearGradient colors={["#381366", "#4A2279", "#573483"]} className="flex-1">
       <SafeAreaView className="flex-1">
-        <Header title="VisiTrak" />
+        <Header title="VisiTrak" onBack={showFeedbackExitPrompt} />
 
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
           <ScrollView ref={scrollRef} contentContainerStyle={{ paddingBottom: sizes.padding }} keyboardShouldPersistTaps="handled">
-            <View style={{ backgroundColor: "#F2F2F2", borderRadius: sizes.borderRadius, padding: sizes.padding, marginHorizontal: sizes.padding / 2, marginTop: sizes.padding }}>
+            <View style={{ backgroundColor: "#fff", borderRadius: sizes.borderRadius, padding: sizes.padding, marginHorizontal: sizes.padding / 2, marginTop: sizes.padding }}>
+              <View
+                style={{
+                  backgroundColor: "#fff",
+                  borderRadius: 8 * scale,
+                  paddingHorizontal: 10 * scale,
+                  paddingVertical: 12 * scale,
+                  marginBottom: 14 * scale,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Image
+                    source={bisuLogo}
+                    resizeMode="contain"
+                    style={{ width: sizes.headerLogo, height: sizes.headerLogo }}
+                  />
+
+                  <View style={{ flex: 1, marginLeft: 8 * scale, paddingRight: 4 * scale }}>
+                    <Text style={{ fontSize: sizes.headerTextSmall, color: "#111", lineHeight: 10 * scale }}>
+                      Republic of the Philippines
+                    </Text>
+                    <Text style={{ fontSize: sizes.headerTextLarge, fontWeight: "800", color: "#111", lineHeight: 11 * scale }}>
+                      BOHOL ISLAND STATE UNIVERSITY
+                    </Text>
+                    <Text style={{ fontSize: sizes.headerTextMedium, fontWeight: "700", color: "#111", lineHeight: 10.5 * scale }}>
+                      Magsija, Balilihan 6342, Bohol, Philippines
+                    </Text>
+                    <Text style={{ fontSize: sizes.headerTextSmall, color: "#111", lineHeight: 10 * scale }}>
+                      Personnel and Human Resource Management Office
+                    </Text>
+                    <Text style={{ fontSize: sizes.headerTextSmall, fontStyle: "italic", color: "#111", lineHeight: 10 * scale }}>
+                      Balance | Integrity | Stewardship | Uprightness
+                    </Text>
+                  </View>
+
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Image
+                      source={bagongPilipinasLogo}
+                      resizeMode="contain"
+                      style={{ width: 38 * scale, height: 34 * scale, marginRight: 8 * scale }}
+                    />
+                    <Image
+                      source={tuvIsoLogo}
+                      resizeMode="contain"
+                      style={{ width: 68 * scale, height: 36 * scale }}
+                    />
+                  </View>
+                </View>
+              </View>
+
               <Text style={{ fontSize: sizes.fontTitle, fontWeight: "700", textAlign: "center", color: "#1f1f1f" }}>
                 CUSTOMER SATISFACTION FEEDBACK FORM
               </Text>
@@ -449,6 +576,22 @@ export default function FeedbackForm() {
               ) : null}
 
               <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 8 * scale }}>
+                <View style={{ width: "48%", minWidth: 150 * scale, marginBottom: 8 * scale }}>
+                  <Text style={{ fontSize: sizes.fontLabel, fontWeight: "600", color: "#1f1f1f" }}>Date of Visit (Petsa sa Pagbisita)</Text>
+                  <View style={{ marginTop: 4 * scale, borderWidth: 1, borderColor: "#707070", borderRadius: 8 * scale, backgroundColor: "#f3f3f3", paddingHorizontal: 12 * scale, paddingVertical: 12 * scale, minHeight: 48 * scale, justifyContent: "center" }}>
+                    <Text style={{ color: "#4f4f4f", fontSize: sizes.fontInput }}>{dateOfVisit}</Text>
+                  </View>
+                </View>
+
+                <View style={{ width: "48%", minWidth: 150 * scale, marginBottom: 8 * scale }}>
+                  <Text style={{ fontSize: sizes.fontLabel, fontWeight: "600", color: "#1f1f1f" }}>Time of Visit (Oras sa Pagbisita)</Text>
+                  <View style={{ marginTop: 4 * scale, borderWidth: 1, borderColor: "#707070", borderRadius: 8 * scale, backgroundColor: "#f3f3f3", paddingHorizontal: 12 * scale, paddingVertical: 12 * scale, minHeight: 48 * scale, justifyContent: "center" }}>
+                    <Text style={{ color: "#4f4f4f", fontSize: sizes.fontInput }}>{timeOfVisit}</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 8 * scale }}>
                 <View style={{ width: "48%", minWidth: 150 * scale, borderWidth: validationErrors.clientType ? 1 : 0, borderColor: "#f87171", backgroundColor: validationErrors.clientType ? "#fff1f2" : "transparent", borderRadius: 8 * scale, paddingHorizontal: 6 * scale, paddingVertical: 4 * scale, marginBottom: 8 * scale }}>
                   <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center" }}>
                     <Text style={{ fontSize: sizes.fontLabel, fontWeight: "600", color: "#1f1f1f", marginRight: 8 * scale }}>Client Type:</Text>
@@ -487,11 +630,11 @@ export default function FeedbackForm() {
               <View style={{ marginTop: 4 * scale }}>
                 <Text style={{ fontSize: sizes.fontLabel, fontWeight: "600", color: "#1f1f1f" }}>Region of Residence</Text>
                 <View style={{ marginTop: 4 * scale, borderWidth: 1, borderColor: validationErrors.region ? "#ef4444" : "#707070", borderRadius: 8 * scale, overflow: "hidden", backgroundColor: validationErrors.region ? "#fff1f2" : "#fff" }}>
-                  <Picker selectedValue={region} onValueChange={(value) => { clearValidationError("region"); setRegion(value); }} style={{ height: 48 * scale, color: "#1f1f1f" }}>
+                  <Picker selectedValue={region || DEFAULT_REGION} onValueChange={(value) => { clearValidationError("region"); setRegion(value || DEFAULT_REGION); }} style={{ height: 48 * scale, color: "#1f1f1f" }}>
                     {regionOptions.map((option) => <Picker.Item key={option} label={option} value={option} />)}
                   </Picker>
                 </View>
-              </View>
+              </View> 
 
               <View style={{ marginTop: 10 * scale }}>
                 <Text style={{ fontSize: sizes.fontLabel, fontWeight: "600", color: "#1f1f1f" }}>Unit / Office Visited</Text>
@@ -586,14 +729,50 @@ export default function FeedbackForm() {
                 </View>
               </View>
 
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginTop: 20 * scale,
+                  marginBottom: 4 * scale,
+                }}
+              >
+                <View style={{ height: 2, width: 88 * scale, backgroundColor: "#111" }} />
+                <Text
+                  style={{
+                    marginHorizontal: 16 * scale,
+                    color: "#333",
+                    fontSize: sizes.statusText,
+                    fontWeight: "700",
+                    textAlign: "center",
+                  }}
+                >
+                  {'" Salamat sa imong Feedback"'}
+                </Text>
+                <View style={{ height: 2, width: 88 * scale, backgroundColor: "#111" }} />
+              </View>
+
               <Pressable onPress={handleSubmit} style={{ width: "100%", backgroundColor: "#4A2279", paddingVertical: 14 * scale, borderRadius: sizes.borderRadius, marginTop: sizes.marginVertical, opacity: submitting ? 0.6 : 1 }} disabled={submitting}>
                 <Text style={{ color: "#fff", textAlign: "center", fontSize: sizes.fontButton, fontWeight: "700" }}>
                   {submitting ? "Submitting..." : "SUBMIT FEEDBACK"}
                 </Text>
               </Pressable>
 
+              <Text style={{ display: "none", textAlign: "center", color: "#4b4b4b", fontSize: sizes.statusText, marginTop: 8 * scale }}>
+                © 2026 LMT. All rights reserved.
+              </Text>
+
+              <Text style={{ display: "none", textAlign: "center", color: "#4b4b4b", fontSize: sizes.statusText, marginTop: 8 * scale }}>
+                © 2026 LMT. All rights reserved.
+              </Text>
+
               <Text style={{ textAlign: "center", color: "#4b4b4b", fontSize: sizes.statusText, marginTop: 8 * scale }}>
-                © 2025 LMT. All rights reserved.
+                {"\u00A9 2026 LMT. All rights reserved."}
+              </Text>
+
+              <Text style={{ color: "#1f1f1f", fontSize: 9 * scale, marginTop: 28 * scale }}>
+                F-AQA-CSF-003 | Rev. 3 | 07/01/24 | Page 1 of 1
               </Text>
             </View>
           </ScrollView>

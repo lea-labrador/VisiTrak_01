@@ -1,6 +1,7 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef, useCallback } from "react";
-import { View, Text, Modal, Pressable, useWindowDimensions, Alert } from "react-native";
+import { View, Text, Modal, useWindowDimensions, Alert } from "react-native";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
+import Pressable from "./SystemPressable";
 import SectionTitle from "./SectionTitle";
 import SelectField from "./SelectField";
 import InputField from "./InputField";
@@ -625,6 +626,7 @@ const VisitInfoSection = forwardRef(({
             value={customOffice}
             onChangeText={handleCustomOfficeChange}
             uppercase
+            autoCapitalize="characters"
             scale={scale}
             ref={customOfficeRef}
             onSubmitEditing={() => purposeFieldRef.current?.focus?.()}
@@ -657,6 +659,7 @@ const VisitInfoSection = forwardRef(({
             value={customPurpose}
             onChangeText={handleCustomPurposeChange}
             uppercase
+            autoCapitalize="characters"
             scale={scale}
             ref={customPurposeRef}
             onSubmitEditing={onCustomPurposeSubmit}

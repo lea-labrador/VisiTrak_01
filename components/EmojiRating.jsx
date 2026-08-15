@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { View, Pressable, Text, useWindowDimensions } from "react-native";
+import { View, Text, useWindowDimensions } from "react-native";
+import Pressable from "./SystemPressable";
 import { Ionicons, MaterialCommunityIcons, Entypo } from "@expo/vector-icons";
 
 const ratingIcons = [
@@ -27,6 +28,11 @@ const satisfactionLabels = [
   "Satisfied",
   "Very Satisfied",
 ];
+
+const ratingOptions = ratingIcons.map((icon, index) => ({
+  ...icon,
+  value: index + 1,
+})).reverse();
 
 export default function EmojiRating({
   value,
@@ -62,9 +68,9 @@ export default function EmojiRating({
     }
   }, [value, notApplicable]);
 
-  const handleEmojiPress = (index) => {
+  const handleEmojiPress = (ratingValue) => {
     setNotApplicable(false);
-    onChange(index + 1);
+    onChange(ratingValue);
   };
 
   const handleNotApplicable = () => {
@@ -108,14 +114,14 @@ export default function EmojiRating({
 
   const emojiRow = (
     <View className="flex-1 flex-row items-start justify-between">
-      {ratingIcons.map((icon, index) => {
-        const isActive = value === index + 1 && !notApplicable;
+      {ratingOptions.map((icon) => {
+        const isActive = value === icon.value && !notApplicable;
         const IconComponent = icon.lib;
 
         return (
           <Pressable
-            key={index}
-            onPress={() => handleEmojiPress(index)}
+            key={icon.value}
+            onPress={() => handleEmojiPress(icon.value)}
             className="flex-1 items-center"
             hitSlop={6}
           >
@@ -142,7 +148,7 @@ export default function EmojiRating({
                 color: "#475569",
               }}
             >
-              {index + 1}
+              {icon.value}
             </Text>
           </Pressable>
         );

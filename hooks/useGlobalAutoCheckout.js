@@ -6,6 +6,8 @@ import { autoCheckoutActiveVisits } from "../lib/visits.service";
 const AUTO_CHECKOUT_KEY = "AUTO_CHECKOUT_LAST_RUN_V2";
 const AUTO_CHECKOUT_RETRY_MS = 5 * 60 * 1000;
 const MANILA_UTC_OFFSET_MINUTES = 8 * 60;
+const AUTO_CHECKOUT_HOUR = 20;
+const AUTO_CHECKOUT_MINUTE = 0;
 
 const getManilaClock = (date = new Date()) => {
   const shifted = new Date(
@@ -26,8 +28,10 @@ const getManilaClock = (date = new Date()) => {
   };
 };
 
-export const useGlobalAutoCheckout = () => {
+export const useGlobalAutoCheckout = (enabled = true) => {
   useEffect(() => {
+    if (!enabled) return undefined;
+
     let isMounted = true;
     let isRunning = false;
     let timeoutId = null;
@@ -44,13 +48,22 @@ export const useGlobalAutoCheckout = () => {
       const manilaNow = getManilaClock(now);
       const offsetMs = MANILA_UTC_OFFSET_MINUTES * 60 * 1000;
 
-      const isPast730 =
-        manilaNow.hour > 19 ||
-        (manilaNow.hour === 19 && manilaNow.minute >= 30);
+      const isPastAutoCheckoutTime =
+        manilaNow.hour > AUTO_CHECKOUT_HOUR ||
+        (manilaNow.hour === AUTO_CHECKOUT_HOUR &&
+          manilaNow.minute >= AUTO_CHECKOUT_MINUTE);
 
-      const targetDay = isPast730 ? manilaNow.day + 1 : manilaNow.day;
+      const targetDay = isPastAutoCheckoutTime
+        ? manilaNow.day + 1
+        : manilaNow.day;
       const targetUtcMs =
-        Date.UTC(manilaNow.year, manilaNow.month - 1, targetDay, 19, 30) -
+        Date.UTC(
+          manilaNow.year,
+          manilaNow.month - 1,
+          targetDay,
+          AUTO_CHECKOUT_HOUR,
+          AUTO_CHECKOUT_MINUTE
+        ) -
         offsetMs;
 
       return Math.max(0, targetUtcMs - now.getTime());
@@ -63,11 +76,12 @@ export const useGlobalAutoCheckout = () => {
       try {
         const manilaNow = getManilaClock();
 
-        const isPast730 =
-          manilaNow.hour > 19 ||
-          (manilaNow.hour === 19 && manilaNow.minute >= 30);
+        const isPastAutoCheckoutTime =
+          manilaNow.hour > AUTO_CHECKOUT_HOUR ||
+          (manilaNow.hour === AUTO_CHECKOUT_HOUR &&
+            manilaNow.minute >= AUTO_CHECKOUT_MINUTE);
 
-        if (!isPast730) return false;
+        if (!isPastAutoCheckoutTime) return false;
 
         const lastRun = await AsyncStorage.getItem(AUTO_CHECKOUT_KEY);
         if (lastRun === manilaNow.dateKey) return false;
@@ -129,5 +143,5 @@ export const useGlobalAutoCheckout = () => {
       clearScheduledRun();
       appStateSubscription.remove();
     };
-  }, []);
+  }, [enabled]);
 };

@@ -27,7 +27,7 @@ export default function Footer({ fontSize, compact = false }) {
         className="text-center text-gray-300"
         style={{ fontSize: sizes.footerFont }}
       >
-        &copy; 2025 LMT. All rights reserved.
+        &copy; 2026 LMT. All rights reserved.
       </Text>
     </View>
   );

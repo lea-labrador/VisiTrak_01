@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  Pressable,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -16,6 +15,7 @@ import { AntDesign } from "@expo/vector-icons";
 
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import Pressable from "../components/SystemPressable";
 import SuccessModal from "./SuccessModal";
 
 import { setCheckOutTimeByName } from "../lib/visits.service";
@@ -63,7 +63,7 @@ export default function ExitScreen() {
   }, []);
 
   const handleNameChange = (text) => {
-    setName(text);
+    setName(text.toUpperCase());
     if (errorMessage) setErrorMessage("");
   };
 

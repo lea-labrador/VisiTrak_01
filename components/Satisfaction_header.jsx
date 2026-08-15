@@ -1,9 +1,10 @@
 import React from "react";
-import { Alert, View, Text, Pressable, useWindowDimensions } from "react-native";
+import { Alert, View, Text, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import Pressable from "./SystemPressable";
 
-export default function Header({ title }) {
+export default function Header({ title, onBack }) {
   const router = useRouter();
   const { width } = useWindowDimensions();
 
@@ -11,6 +12,10 @@ export default function Header({ title }) {
   const isLarge = width > 700;
   const scale = isLarge ? 1.4 : width > 600 ? 1.2 : 1;
   const confirmBackToHome = () => {
+    if (onBack) {
+      onBack();
+      return;
+    }
     Alert.alert(
       "Leave this page?",
       "Are you sure you want to go back to the home screen?",

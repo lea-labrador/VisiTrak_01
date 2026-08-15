@@ -1,4 +1,5 @@
-import { Pressable, Text } from "react-native";
+import { Text } from "react-native";
+import Pressable from "./SystemPressable";
 
 export default function PrimaryButton({ title, onPress }) {
   return (

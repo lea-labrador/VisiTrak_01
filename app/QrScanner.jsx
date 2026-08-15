@@ -1,7 +1,8 @@
-import { View, Text, Pressable, TextInput, useWindowDimensions } from "react-native";
+import { View, Text, TextInput, useWindowDimensions } from "react-native";
 import { useState } from "react";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { MaterialIcons } from "@expo/vector-icons";
+import Pressable from "../components/SystemPressable";
 
 export default function QrScanner({ onScanned, keyCode, setKeyCode }) {
   const { width } = useWindowDimensions();

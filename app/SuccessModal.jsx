@@ -1,12 +1,12 @@
 import {
   View,
   Text,
-  Pressable,
   Modal,
   Dimensions,
   Image,
 } from "react-native";
 import { useRouter } from "expo-router";
+import Pressable from "../components/SystemPressable";
 
 const { width } = Dimensions.get("window");
 

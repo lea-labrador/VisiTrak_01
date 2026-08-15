@@ -187,10 +187,11 @@ export default function PersonalInfoSection({
             icon={
               <Ionicons name="person-outline" size={sizes.inputIconSize} color="#0a3aca" />
             }
-            placeholder="Full Name (e.g., MAYCELL MACEREN)"
+            placeholder="Full Name (e.g., LEA SHEILA LABRADOR)"
             value={fullName}
             onChangeText={handleNameChange}
             uppercase
+            autoCapitalize="characters"
             onSubmitEditing={onFullNameSubmit}
             returnKeyType="next"
             scale={scale}
@@ -243,6 +244,7 @@ export default function PersonalInfoSection({
               value={homeAddress}
               onChangeText={handleOutsideAddressChange}
               uppercase
+              autoCapitalize="characters"
               onSubmitEditing={onHomeAddressSubmit}
               returnKeyType="next"
               scale={scale}

@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, Pressable, ImageBackground, Image, useWindowDimensions } from "react-native";
+import { View, Text, ImageBackground, Image, useWindowDimensions } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import Pressable from "../components/SystemPressable";
 
 export default function ThankYouScreen() {
   const navigation = useNavigation();
