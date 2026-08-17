@@ -1,50 +1,337 @@
-# Welcome to your Expo app 👋
+# VisiTrak Expo App Installation Guide — Windows
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 1. Install Git
 
-## Get started
+Install **Git for Windows**.
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+After installation, open **Command Prompt** or **PowerShell** and check:
 
 ```bash
-npm run reset-project
+git --version
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+You should see something similar to:
 
-## Learn more
+```text
+git version 2.x.x
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 2. Install Node.js and npm
 
-## Join the community
+Install the **LTS version of Node.js**.
 
-Join our community of developers creating universal apps.
+npm is automatically installed with Node.js.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+After installation, close and reopen CMD or PowerShell.
+
+Check Node.js:
+
+```bash
+node --version
+```
+
+Check npm:
+
+```bash
+npm --version
+```
+
+You should see something similar to:
+
+```text
+v22.x.x
+10.x.x
+```
+
+Expo's current system requirements include Node.js LTS, and Windows is supported.
+
+---
+
+## 3. Install Expo Go on Your Phone
+
+If you want to run the application on a physical phone, install **Expo Go** on your Android or iPhone.
+
+You don't need to install Expo itself globally on Windows.
+
+The project already contains the Expo package, and you will use:
+
+```bash
+npx expo start
+```
+
+Expo officially recommends using `npx expo` for the CLI.
+
+---
+
+## 4. Clone the VisiTrak Repository
+
+Open CMD or PowerShell.
+
+Go to your Documents folder:
+
+```bash
+cd %USERPROFILE%\Documents
+```
+
+Clone the repository:
+
+```bash
+git clone https://github.com/lea-labrador/VisiTrak_01.git
+```
+
+After cloning, a folder named:
+
+```text
+VisiTrak_01
+```
+
+will be created.
+
+---
+
+## 5. Enter the Project
+
+Run:
+
+```bash
+cd VisiTrak_01
+```
+
+Check the files:
+
+```bash
+dir
+```
+
+You should see files/folders such as:
+
+```text
+app
+assets
+components
+data
+lib
+package.json
+package-lock.json
+app.json
+eas.json
+metro.config.js
+tsconfig.json
+```
+
+This repository is already configured as an Expo application.
+
+---
+
+## 6. Install the Project Dependencies
+
+This is important.
+
+Inside the `VisiTrak_01` folder, run:
+
+```bash
+npm install
+```
+
+This reads the project's:
+
+```text
+package.json
+```
+
+and installs the required packages into:
+
+```text
+node_modules
+```
+
+The repository's own README specifies `npm install` as the first setup step.
+
+---
+
+## 7. Start the Expo Development Server
+
+After `npm install` finishes, run:
+
+```bash
+npx expo start
+```
+
+Expo will start the development server and display a QR code in the terminal.
+
+You may see something similar to:
+
+```text
+Starting project at ...
+Metro waiting on ...
+› Scan the QR code above with Expo Go
+```
+
+---
+
+## 8. Run the App on Your Phone
+
+Make sure your **computer and phone are connected to the same Wi-Fi network**.
+
+Then:
+
+### Android
+
+1. Open **Expo Go**.
+2. Scan the QR code shown in the terminal.
+3. The VisiTrak app should open.
+
+### iPhone
+
+1. Open the Camera app.
+2. Scan the QR code.
+3. Tap the Expo link.
+4. It should open the project in Expo Go.
+
+Expo's documentation describes scanning the QR code from the development server to open the project on a physical device.
+
+---
+
+## 9. Useful Expo Commands
+
+Start the project:
+
+```bash
+npx expo start
+```
+
+Start and clear the cache:
+
+```bash
+npx expo start -c
+```
+
+Show Expo CLI help:
+
+```bash
+npx expo -h
+```
+
+Check whether Expo packages are compatible:
+
+```bash
+npx expo install --check
+```
+
+Expo provides `npx expo install` for installing packages using versions compatible with the project's Expo/React Native version.
+
+---
+
+# Complete Installation From Scratch
+
+For a new Windows computer, install:
+
+```text
+Git
+Node.js LTS
+Expo Go on your phone
+```
+
+Then run:
+
+```bash
+git clone https://github.com/lea-labrador/VisiTrak_01.git
+
+cd VisiTrak_01
+
+npm install
+
+npx expo start
+```
+
+Then scan the QR code using **Expo Go**.
+
+---
+
+# If You Already Cloned the Project
+
+You don't need to clone it again.
+
+Go to the project:
+
+```bash
+cd %USERPROFILE%\Documents\VisiTrak_01
+```
+
+Pull the latest changes:
+
+```bash
+git pull
+```
+
+If dependencies changed:
+
+```bash
+npm install
+```
+
+Then start Expo:
+
+```bash
+npx expo start
+```
+
+---
+
+# If Expo Gives You a Package Version Warning
+
+If you see something like:
+
+```text
+Some packages are incompatible with the installed expo version
+```
+
+don't immediately run random `npm install` commands.
+
+First run:
+
+```bash
+npx expo install --check
+```
+
+Expo can check package versions against the Expo version used by the project.
+
+If Expo recommends fixing them, you can use:
+
+```bash
+npx expo install --fix
+```
+
+---
+
+# Quick Reference
+
+```bash
+# Clone
+git clone https://github.com/lea-labrador/VisiTrak_01.git
+
+# Enter project
+cd VisiTrak_01
+
+# Install dependencies
+npm install
+
+# Start Expo
+npx expo start
+```
+
+**Important:** You do **not** need to run:
+
+```bash
+npm install -g expo-cli
+```
+
+For this project, use:
+
+```bash
+npx expo start
+```
+
+which is the current Expo CLI workflow.
